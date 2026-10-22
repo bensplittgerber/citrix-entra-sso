@@ -86,7 +86,7 @@ $result = Invoke-Command -ComputerName $cfg.storeFrontServer -ArgumentList $desi
     # dry run of a new store: the steps below need the objects above; list them so the plan is complete
     if ($dryRun -and (-not $store -or -not $auth -or -not $web)) {
         foreach ($i in 'Auth protocols (enabled)', 'Entra ID settings', 'Launch option EntraIdSsoEnabled', 'Launch option VdaLogonDataProvider (FAS)',
-            "Gateway $($d.GatewayName)", 'Gateway registered on store', 'Web auth methods', 'Web settings (plugin assistant)') {
+            "Gateway $($d.GatewayName)".TrimEnd(), 'Gateway registered on store', 'Web auth methods', 'Web settings (plugin assistant)') {
             $log.Add([pscustomobject]@{ Action = 'WouldSet'; Item = $i; Current = '(after create)'; Desired = '(as configured)' })
         }
     }
@@ -110,7 +110,11 @@ $result = Invoke-Command -ComputerName $cfg.storeFrontServer -ArgumentList $desi
         Step 'Launch option EntraIdSsoEnabled' $lo.EntraIdSsoEnabled $true { Set-STFStoreLaunchOptions -StoreService $store -EntraIdSsoEnabled $true -Confirm:$false }
         Step 'Launch option VdaLogonDataProvider (FAS)' $lo.VdaLogonDataProviderName '' { Set-STFStoreLaunchOptions -StoreService $store -VdaLogonDataProvider '' -Confirm:$false }
 
-        # 7 roaming gateway
+        # 7 roaming gateway (optional: without storeFront.gatewayName the store is created without remote access,
+        #   the Gateway is added in a later run once it exists)
+        if (-not $d.GatewayName) {
+            $log.Add([pscustomobject]@{ Action = 'Skipped'; Item = 'Gateway + store registration'; Current = ''; Desired = 'no storeFront.gatewayName in config' })
+        } else {
         $gw = Get-STFRoamingGateway -Name $d.GatewayName -ErrorAction SilentlyContinue
         $want = '{0}|{1}|Domain|{2}|{3}|True|{4}' -f $d.GatewayUrl, $d.CallbackUrl, $d.GatewayVersion, $d.GatewaySnip, ($d.StaUrls -join ',')
         $cur = if ($gw) { '{0}|{1}|{2}|{3}|{4}|{5}|{6}' -f $gw.Location, $gw.CallbackUrl, $gw.Logon, $gw.Version, $gw.IpAddress, $gw.SessionReliability, (($gw.SecureTicketAuthorityUrls | ForEach-Object { "$($_.StaUrl)" }) -join ',') } else { '' }
@@ -121,6 +125,7 @@ $result = Invoke-Command -ComputerName $cfg.storeFrontServer -ArgumentList $desi
         # 8 register the gateway on the store (remote access) as default
         $reg = @(Get-STFStoreRegisteredGateway -StoreService $store -ErrorAction SilentlyContinue).Name -contains $d.GatewayName
         Step 'Gateway registered on store' $reg $true { Register-STFStoreGateway -Gateway (Get-STFRoamingGateway -Name $d.GatewayName) -StoreService $store -DefaultGateway -Confirm:$false }
+        }
     }
 
     if ($web) {
@@ -141,5 +146,7 @@ $result = Invoke-Command -ComputerName $cfg.storeFrontServer -ArgumentList $desi
 
 $result | ForEach-Object { if ($_.Action -eq 'NoChange') { [pscustomobject]@{ Action = $_.Action; Item = $_.Item; Change = '' } } else { [pscustomobject]@{ Action = $_.Action; Item = $_.Item; Change = "'$($_.Current)' -> '$($_.Desired)'" } } } |
     Format-Table -AutoSize -Wrap | Out-String -Width 240 | Write-Host
-$changes = @($result | Where-Object Action -notin 'NoChange')
+$changes = @($result | Where-Object Action -notin 'NoChange', 'Skipped', 'Manual')
+$notes = @($result | Where-Object Action -in 'Skipped', 'Manual')
+if ($notes) { Write-Host "$($notes.Count) item(s) skipped or manual, see table." }
 Write-Host ($dryRun ? "Dry run: $($changes.Count) change(s) planned, nothing changed." : "$($changes.Count) change(s) applied.")
