@@ -29,6 +29,9 @@ $desired = @{
     FarmName = $sfc.farmName; FarmServers = @($sfc.farmServers); FarmPort = [int]$sfc.farmPort; FarmTransport = $sfc.farmTransport
     GatewayName = $sfc.gatewayName; GatewayVersion = $sfc.gatewayVersion; GatewaySnip = $sfc.gatewaySnip
     CallbackUrl = $sfc.callbackUrl; StaUrls = @($sfc.staUrls)
+    # exact sets: listed protocols/methods are enabled, the others disabled (a new auth service enables ExplicitForms)
+    AuthProtocols = @($sfc.authProtocols ?? @('CitrixAGBasic', 'CitrixFederation'))
+    WebAuthMethods = @($sfc.webAuthMethods ?? @('CitrixAGBasic'))
 }
 $dryRun = -not $PSCmdlet.ShouldProcess($cfg.storeFrontServer, "configure StoreFront store $($desired.StorePath) for Entra SSO")
 
@@ -46,8 +49,13 @@ $result = Invoke-Command -ComputerName $cfg.storeFrontServer -ArgumentList $desi
         $log.Add([pscustomobject]@{ Action = $action; Item = $Item; Current = "$Current"; Desired = "$Desired" })
     }
 
+    # 0 precheck before any change: the display name must not belong to another store (StoreFront allows duplicates,
+    #   Workspace app and the console then show two stores with the same name)
+    $dup = @(Get-STFStoreService | Where-Object { $_.FriendlyName -eq $d.FriendlyName -and $_.VirtualPath -ne $d.StorePath })
+    if ($dup) { throw "Store display name '$($d.FriendlyName)' is already used by $(@($dup.VirtualPath) -join ', '). Choose another storeFriendlyName." }
+
     # 1 authentication service
-    $auth = Get-STFAuthenticationService -VirtualPath $d.AuthPath -ErrorAction SilentlyContinue
+    $auth =Get-STFAuthenticationService -VirtualPath $d.AuthPath -ErrorAction SilentlyContinue
     Step 'Authentication service' ($(if ($auth) { $auth.VirtualPath } else { '' })) $d.AuthPath -Create { $script:auth = Add-STFAuthenticationService -VirtualPath $d.AuthPath -Confirm:$false }
     if (-not $auth -and -not $dryRun) { $auth = Get-STFAuthenticationService -VirtualPath $d.AuthPath }
 
@@ -57,8 +65,11 @@ $result = Invoke-Command -ComputerName $cfg.storeFrontServer -ArgumentList $desi
         Add-STFStoreService -VirtualPath $d.StorePath -AuthenticationService $auth -FriendlyName $d.FriendlyName -FarmName $d.FarmName -FarmType XenDesktop `
             -Servers $d.FarmServers -Port $d.FarmPort -TransportType $d.FarmTransport -LoadBalance $true -Confirm:$false }
     if (-not $store -and -not $dryRun) { $store = Get-STFStoreService -VirtualPath $d.StorePath }
+    if ($store -and $store.FriendlyName -ne $d.FriendlyName) {
+        $log.Add([pscustomobject]@{ Action = 'Manual'; Item = 'Store display name'; Current = $store.FriendlyName; Desired = $d.FriendlyName })
+    }
     if ($store) {
-        $farm = Get-STFStoreFarm -StoreService $store -FarmName $d.FarmName -ErrorAction SilentlyContinue
+        $farm =Get-STFStoreFarm -StoreService $store -FarmName $d.FarmName -ErrorAction SilentlyContinue
         $cur = if ($farm) { '{0}:{1}/{2}' -f ($farm.Servers -join ','), $farm.Port, $farm.TransportType } else { '' }
         Step "Farm $($d.FarmName)" $cur ('{0}:{1}/{2}' -f ($d.FarmServers -join ','), $d.FarmPort, $d.FarmTransport) {
             Set-STFStoreFarm -StoreService $store -FarmName $d.FarmName -FarmType XenDesktop -Servers $d.FarmServers -Port $d.FarmPort -TransportType $d.FarmTransport -Confirm:$false }
@@ -74,16 +85,21 @@ $result = Invoke-Command -ComputerName $cfg.storeFrontServer -ArgumentList $desi
 
     # dry run of a new store: the steps below need the objects above; list them so the plan is complete
     if ($dryRun -and (-not $store -or -not $auth -or -not $web)) {
-        foreach ($i in 'Auth protocol CitrixAGBasic', 'Entra ID settings', 'Launch option EntraIdSsoEnabled', 'Launch option VdaLogonDataProvider (FAS)',
+        foreach ($i in 'Auth protocols (enabled)', 'Entra ID settings', 'Launch option EntraIdSsoEnabled', 'Launch option VdaLogonDataProvider (FAS)',
             "Gateway $($d.GatewayName)", 'Gateway registered on store', 'Web auth methods', 'Web settings (plugin assistant)') {
             $log.Add([pscustomobject]@{ Action = 'WouldSet'; Item = $i; Current = '(after create)'; Desired = '(as configured)' })
         }
     }
 
     if ($store -and $auth) {
-        # 4 Gateway authentication on the authentication service
-        $agb = (Get-STFAuthenticationServiceProtocol -AuthenticationService $auth | Where-Object Name -eq 'CitrixAGBasic').Enabled
-        Step 'Auth protocol CitrixAGBasic' $agb $true { Enable-STFAuthenticationServiceProtocol -Name CitrixAGBasic -AuthenticationService $auth }
+        # 4 authentication protocols: exactly the configured set
+        $protos = @(Get-STFAuthenticationServiceProtocol -AuthenticationService $auth)
+        $curOn = @($protos | Where-Object Enabled | ForEach-Object Name | Sort-Object)
+        $wantOn = @($d.AuthProtocols | Sort-Object)
+        Step 'Auth protocols (enabled)' ($curOn -join ',') ($wantOn -join ',') {
+            $on = @($wantOn | Where-Object { $_ -notin $curOn }); $off = @($curOn | Where-Object { $_ -notin $wantOn })
+            if ($on) { Enable-STFAuthenticationServiceProtocol -Name $on -AuthenticationService $auth }
+            if ($off) { Disable-STFAuthenticationServiceProtocol -Name $off -AuthenticationService $auth -Confirm:$false } }
 
         # 5 Entra ID settings
         $ent = Get-STFEntraIdSettings -AuthenticationService $auth -WarningAction SilentlyContinue
@@ -108,9 +124,9 @@ $result = Invoke-Command -ComputerName $cfg.storeFrontServer -ArgumentList $desi
     }
 
     if ($web) {
-        # 9 web authentication methods: add CitrixAGBasic, keep the others
-        $methods = @((Get-STFWebReceiverAuthenticationMethods -WebReceiverService $web).Methods)
-        $wantMethods = @($methods + 'CitrixAGBasic' | Select-Object -Unique)
+        # 9 web authentication methods: exactly the configured set (Gateway pass-through only by default)
+        $methods = @((Get-STFWebReceiverAuthenticationMethods -WebReceiverService $web).Methods | Sort-Object)
+        $wantMethods = @($d.WebAuthMethods | Sort-Object)
         Step 'Web auth methods' ($methods -join ',') ($wantMethods -join ',') { Set-STFWebReceiverAuthenticationMethods -WebReceiverService $web -AuthenticationMethods $wantMethods -Confirm:$false }
 
         # 10 web settings: "Let the user choose", not "locally installed app only", browser extension on (hybrid launch)
