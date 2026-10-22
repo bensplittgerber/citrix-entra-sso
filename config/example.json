@@ -7,5 +7,17 @@
   "storeFrontServer": "sf01.example.org",
   "storeVirtualPath": "/Citrix/Store",
   "storeWebVirtualPath": "/Citrix/StoreWeb",
-  "deliveryGroups": [ "Entra SSO Desktops" ]
+  "deliveryGroups": [ "Entra SSO Desktops" ],
+  "storeFront": {
+    "storeFriendlyName": "Store",
+    "farmName": "Controller",
+    "farmServers": [ "ddc01.example.org" ],
+    "farmPort": 443,
+    "farmTransport": "HTTPS",
+    "gatewayName": "gateway.example.org_EntraSSO",
+    "gatewayVersion": "Version10_0_69_4",
+    "gatewaySnip": "192.0.2.16",
+    "callbackUrl": "https://callback.example.org/CitrixAuthService/AuthService.asmx",
+    "staUrls": [ "https://ddc01.example.org/scripts/ctxsta.dll" ]
+  }
 }
