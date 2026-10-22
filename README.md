@@ -15,6 +15,15 @@ Status: work in progress. Verified end to end in a lab; the PowerShell automatio
   failed (froze) when only the variant without the slash was registered.
 - A failure signature on the VDA that identifies the problem in minutes (CloudAP `0xC0048422` after a 31.4 s wait).
 
+## Limitation: one Entra SSO store origin per site
+The `AzureSSOn*` values are **site-wide** Broker settings: one Client application and one redirect URL per Citrix
+site. Because the redirect URL must equal the Store Web URL that the browser sees, browser (HTML5) and hybrid launches
+get Entra SSO for **one store origin per site** (one Gateway URL + store). A second store behind another Gateway URL,
+or reached directly on StoreFront, does not match; the HTML5 client then logs "Azure Redirect URL does not match with
+the store origin and hence detecting as Multi tenant Entra ID store" and SSO fails. Not yet verified for the native
+Workspace app. Switching the site to another store means re-running the Broker settings (and the redirect URI on the
+Client application).
+
 ## Scope
 | Component | Version tested |
 |---|---|
