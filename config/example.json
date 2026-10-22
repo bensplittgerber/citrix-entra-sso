@@ -1,0 +1,11 @@
+{
+  "tenantId": "<tenant-id>",
+  "clientAppId": "<client-app-id>",
+  "resourceAppId": "3a510bb1-e334-4298-831e-3eac97f8b26c",
+  "gatewayUrl": "https://gateway.example.org",
+  "deliveryController": "ddc01.example.org",
+  "storeFrontServer": "sf01.example.org",
+  "storeVirtualPath": "/Citrix/Store",
+  "storeWebVirtualPath": "/Citrix/StoreWeb",
+  "deliveryGroups": [ "Entra SSO Desktops" ]
+}
