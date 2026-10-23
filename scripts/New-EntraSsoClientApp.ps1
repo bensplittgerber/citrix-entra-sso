@@ -76,8 +76,8 @@ function ScopeAccess($sp, [string[]] $names) {
             @{ id = $s.id; type = 'Scope' } })
 }
 $rra = @(
-    @{ resourceAppId = $graphAppId; resourceAccess = (ScopeAccess $graphSp $graphScopes) }
-    @{ resourceAppId = $cfg.resourceAppId; resourceAccess = (ScopeAccess $resSp $resScopes) }
+    @{ resourceAppId = $graphAppId; resourceAccess = @(ScopeAccess $graphSp $graphScopes) }
+    @{ resourceAppId = $cfg.resourceAppId; resourceAccess = @(ScopeAccess $resSp $resScopes) }
 )
 $rraText = { param($r) (@($r) | ForEach-Object { '{0}:{1}' -f $_.resourceAppId, ((@($_.resourceAccess) | ForEach-Object { $_.id } | Sort-Object) -join ',') } | Sort-Object) -join ' ' }
 
