@@ -119,7 +119,7 @@ foreach ($g in @(@{ Sp = $graphSp; Scopes = $graphScopes; Name = 'Microsoft Grap
 $rdBase = "v1.0/servicePrincipals/$($resSp.id)/remoteDesktopSecurityConfiguration"
 $rd = G GET $rdBase
 Step 'RDS protocol on resource app' $rd.isRemoteDesktopProtocolEnabled $true { G PATCH $rdBase @{ isRemoteDesktopProtocolEnabled = $true } }
-$approved = @((G GET "$rdBase/approvedClientApps").value | ForEach-Object id)
+$approved = @((G GET "$rdBase/approvedClientApps").value | ForEach-Object { $_.id })
 $isApproved = [bool]($sp -and $approved -contains $sp.id)
 Step 'Approved client app' $isApproved $true { G POST "$rdBase/approvedClientApps" @{ id = $sp.id; displayName = $ea.displayName } }
 
