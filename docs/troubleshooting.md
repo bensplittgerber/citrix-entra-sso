@@ -41,3 +41,10 @@ messaging host, VDA prerequisites. RDP with Entra SSO to the same VDA worked (ho
 
 Requirements seen in tests: pop-ups allowed for the store; on macOS browsers the silent Entra request (`prompt=none`)
 needs the Entra session cookie (worked with "Stay signed in" (KMSI) enabled; KMSI-off matrix pending).
+
+## NetScaler OIDC action: user name must be the Entra object id
+StoreFront (Entra SSO enabled on the store) shows "Cannot complete your request." and logs:
+`Entra ID single sign-on failed because the username '<upn>' passed by Citrix Gateway is not an Entra OID (GUID format).
+Resolution: In the NetScaler OIDC policy action, set the username field to 'oid'.`
+Fix: `set authentication OAuthAction <name> -userNameField oid` (the working reference Gateway used `oid` from the start;
+`preferred_username` or `upn` fail).
