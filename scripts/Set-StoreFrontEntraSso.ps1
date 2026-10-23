@@ -75,17 +75,22 @@ $result = Invoke-Command -ComputerName $cfg.storeFrontServer -ArgumentList $desi
             Set-STFStoreFarm -StoreService $store -FarmName $d.FarmName -FarmType XenDesktop -Servers $d.FarmServers -Port $d.FarmPort -TransportType $d.FarmTransport -Confirm:$false }
     }
 
-    # 3 Web Receiver (modern UI on create)
+    # 3 Web Receiver with the modern UI. Entra SSO needs userInterfaceExperience "Workspace": with "ReceiverForWeb" the
+    #   page downloads a plain ICA file and never starts the Entra token flow (lab 2026-10-23: VDA waits, 0xC0048422).
+    #   -ClassicReceiverExperience $false alone does NOT set it; the parameter is -WebUIExperence on Add (sic) and
+    #   -WebUIExperience on Set. Read back from web.config (userInterfaceExperience/@experience).
     $web = Get-STFWebReceiverService -VirtualPath $d.WebPath -ErrorAction SilentlyContinue
-    Step 'Web Receiver service' ($(if ($web) { $web.VirtualPath } else { '' })) $d.WebPath -Create { Add-STFWebReceiverService -VirtualPath $d.WebPath -StoreService $store -ClassicReceiverExperience $false -Confirm:$false }
+    Step 'Web Receiver service' ($(if ($web) { $web.VirtualPath } else { '' })) $d.WebPath -Create { Add-STFWebReceiverService -VirtualPath $d.WebPath -StoreService $store -ClassicReceiverExperience $false -WebUIExperence Workspace -Confirm:$false }
     if (-not $web -and -not $dryRun) { $web = Get-STFWebReceiverService -VirtualPath $d.WebPath }
-    if ($web -and $web.WebReceiver.ClassicReceiverExperience) {
-        $log.Add([pscustomobject]@{ Action = 'Manual'; Item = 'Web Receiver UI'; Current = 'classic'; Desired = 'modern (Entra SSO needs the modern UI)' })
+    if ($web) {
+        $wc = Join-Path $web.PhysicalPath 'web.config'
+        $exp = ([xml](Get-Content -LiteralPath $wc)).SelectSingleNode('//userInterfaceExperience').experience
+        Step 'Web UI experience' $exp 'Workspace' { Set-STFWebReceiverService -WebReceiverService $web -WebUIExperience Workspace }
     }
 
     # dry run of a new store: the steps below need the objects above; list them so the plan is complete
     if ($dryRun -and (-not $store -or -not $auth -or -not $web)) {
-        foreach ($i in 'Auth protocols (enabled)', 'Entra ID settings', 'Launch option EntraIdSsoEnabled', 'Launch option VdaLogonDataProvider (FAS)',
+        foreach ($i in 'Web UI experience', 'Auth protocols (enabled)', 'Entra ID settings', 'Launch option EntraIdSsoEnabled', 'Launch option VdaLogonDataProvider (FAS)',
             "Gateway $($d.GatewayName)".TrimEnd(), 'Gateway registered on store', 'Web auth methods', 'Web settings (plugin assistant)') {
             $log.Add([pscustomobject]@{ Action = 'WouldSet'; Item = $i; Current = '(after create)'; Desired = '(as configured)' })
         }

@@ -48,3 +48,24 @@ StoreFront (Entra SSO enabled on the store) shows "Cannot complete your request.
 Resolution: In the NetScaler OIDC policy action, set the username field to 'oid'.`
 Fix: `set authentication OAuthAction <name> -userNameField oid` (the working reference Gateway used `oid` from the start;
 `preferred_username` or `upn` fail).
+
+## Store web site must use the modern UI ("Workspace" experience)
+With `userInterfaceExperience experience="ReceiverForWeb"` in the Web Receiver web.config, the store page launches with a
+plain ICA download (`Resources/LaunchIca`) and never starts the Entra token flow (no `Tickets/RequestStoreTicket`, no
+`ctxaadsso://` handoff, no Entra request). The VDA then shows the failure signature above (Entra mode, 31 s wait,
+CloudAP `0xC0048422`). `Add-STFWebReceiverService -ClassicReceiverExperience $false` does not set the modern UI; use
+`-WebUIExperence Workspace` (Add, sic) or `Set-STFWebReceiverService -WebUIExperience Workspace`. Found with an Edge
+`edge://net-export` log of a hybrid launch (2026-10-23).
+
+## NetScaler OIDC action: no userinfo endpoint
+With `-metadataUrl` the OAuth action also takes the Graph `userinfo` endpoint, and the user name field is then read from
+the userinfo answer, which has no `oid` -> the user name falls back to the UPN and StoreFront refuses Entra SSO. Configure
+the endpoints explicitly (authorization, token, keys, issuer, audience) without `metadataUrl` / `userInfoURL`
+(lab 2026-10-23; the working reference Gateway had neither).
+
+## mTLS Gateway in front of the store
+nFactor keeps the user name of the first factor. A client certificate factor that sets the user name (UPN from the SAN)
+therefore hides the Entra `oid`; use a certificate check without a user name (`-action NO_AUTHN`, rule
+`CLIENT.SSL.CLIENT_CERT.EXISTS`) as factor 1. The certificate is still enforced by the SSL profile. Note: certificate
+and Entra user are then no longer coupled (add a UPN comparison). Native Workspace app cannot add an account on a
+Gateway that requires a client certificate; only browser / hybrid launches.
