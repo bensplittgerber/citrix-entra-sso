@@ -34,12 +34,15 @@ messaging host, VDA prerequisites. RDP with Entra SSO to the same VDA worked (ho
 ## Client matrix (lab, 2026-10)
 | Client | HTML5 | Hybrid (browser -> Workspace app) | Native Workspace app |
 |---|---|---|---|
-| Windows 11, Chrome | OK | OK (Web Extension + Workspace app 2607) | OK (store added in Workspace app; not via an mTLS Gateway) |
-| Windows 11, Edge | OK | OK **only with the Citrix Web Extension allowed on the store site** (site access "On all sites" or the store URL; with "On click" the launch ends on the Windows logon screen) | OK |
-| macOS, Chrome | OK | OK | OK |
+| Windows 11, Chrome | OK | OK (Web Extension 26.1.6 + Workspace app 2607.1), also through an mTLS Gateway | OK (store added in Workspace app; not via an mTLS Gateway) |
+| Windows 11, Edge | OK | OK **only with the Citrix Web Extension allowed on the store site** (site access "On all sites" or the store URL; with "On click" the launch ends on the Windows logon screen), also through an mTLS Gateway | OK |
+| Windows 11 laptop, hybrid joined, Windows Hello logon, mobile hotspot (external), Chrome | OK (mTLS Gateway) | OK (Workspace app 2607, 26.7.0.269, mTLS Gateway) | not tested |
+| Windows Server 2022 (remote worker, RDP), Edge | OK | OK (Workspace app 26.3.20.31, mTLS Gateway, smart card via RDP redirection) **after ISRG Root X1 was in the machine root store** (see Let's Encrypt below) | not tested |
+| macOS, Chrome | OK | OK (Workspace app for Mac 2609), also through an mTLS Gateway | OK |
 | macOS, Safari | OK | **not supported** (Citrix: hybrid only Edge/Chrome + Web Extension) | - |
 | iPadOS, embedded web view | not supported (WebKit; also no FIDO2) | - | not tested |
 
+Hybrid launches in all rows need the store on **port 443** (see "store URL with a custom port").
 Requirements seen in tests: pop-ups allowed for the store; on macOS browsers the silent Entra request (`prompt=none`)
 needs the Entra session cookie (worked with "Stay signed in" (KMSI) enabled; KMSI-off matrix pending).
 
@@ -71,6 +74,21 @@ therefore hides the Entra `oid`; use a certificate check without a user name (`-
 and Entra user are then no longer coupled (add a UPN comparison). Native Workspace app cannot add an account on a
 Gateway that requires a client certificate; only browser / hybrid launches.
 
+Verified end to end with `-clientCert Mandatory` (lab 2026-10-24, YubiKey PIV for the client certificate, YubiKey
+FIDO2 passkey for Entra): HTML5 and hybrid launches (Windows 11 Edge/Chrome, macOS Chrome, Windows Server remote
+worker over RDP smart card redirection) log on with Entra SSO within seconds; Workspace app asks for the smart card
+PIN for its own HDX connection to the Gateway. Without the smart card the browser gets `ERR_CONNECTION_RESET` - no
+logon page is exposed.
+- Keep **Mandatory**. With `Optional` a client without certificate completes TLS and the Gateway shows the default
+  user name / password form (no login schema bound, no policy matches, so a logon fails - but the Gateway is exposed
+  and a later fallback policy would open a password path).
+- Routing HDX through a second Gateway without client certificate ("optimal HDX routing") is not needed. If used, put
+  it on a separate NetScaler: pre-auth memory disclosure bugs (CitrixBleed type) read packet-engine memory, so an
+  unprotected vServer on the same appliance exposes the session tokens of the mTLS Gateway.
+- Only one StoreFront Gateway entry per host on the store. With two entries for the same FQDN (here the old
+  `:8461` listener and the new `:443` one) StoreFront wrote the first one into the ICA file; HDX then went to the old
+  port (HTML5: WebSocket 1006 from networks that block it). Unregister the old entry from the store.
+
 ## Browser launches on the LAN: Local Network Access (Chromium)
 On the LAN the Gateway FQDN resolves to a private address. The silent Entra request of the HTML5 client
 (`prompt=none`, hidden iframe) returns from `login.microsoftonline.com` to the store URL; Edge/Chrome block that with
@@ -100,3 +118,42 @@ change Entra mode at connect, Windows logon after 2 s.
 ![Citrix Web Extension in Edge with site access 'On click' - change to 'On specific sites' or 'On all sites'](img/edge-extension-site-access-on-click.png)
  (The Workspace app native messaging host being registered only
 under the Chrome registry keys was a red herring - not needed for Edge.)
+
+## Hybrid launch: store URL with a custom port (Citrix Web Extension)
+Symptom (lab 2026-10-24, extension 26.1.6, Edge, site access "On all sites"): store behind a Gateway on a custom port
+(`https://gateway.example.org:8461/Citrix/StoreWeb/`, Broker redirect URL with the same port). HTML5 launches work with
+Entra SSO, hybrid launches end on the Windows logon screen (VDA failure signature above). The browser sends only
+`GetLaunchStatus` and `LaunchIca` (`LaunchMechanism=Browser_Extension`) and **no** Entra request for
+Citrix-Workspace-Resource; Workspace app does not request one either. In a working hybrid launch the Entra sign-in log
+shows the Client application requesting Citrix-Workspace-Resource with client app "Browser" right before Workspace
+app connects.
+Cause (extension 26.1.6, `CitrixBrowserExtension.js`): the extension only registers a tab as the Entra SSO store tab
+(`saveActiveWSUITabForAADSSO` -> `isCitrixStoreUrl`) when its URL matches `https{0,1}://[\w|\.|\-]+/Citrix/.*`.
+The host part allows no `:`, so `https://gateway.example.org:8461/Citrix/...` never matches; the store page still
+launches through the extension, but the Entra token handoff to Workspace app never starts. The same pattern also
+means the store path must start with `/Citrix/`.
+Fix: publish the Entra SSO store on port 443 (own IP or FQDN for that Gateway), with the Broker redirect URL, the SPA
+redirect URI and the NetScaler OIDC redirect URI (`https://<gateway>/oauth/login`) without the port. Verified
+2026-10-24: same Gateway, store and mTLS settings on :443 -> the extension starts the token flow (silent `authorize`
+with `ms-device-service://.../id/<vda-device-id>/user_impersonation`, `token` 200) and hybrid SSO works. Watch out for
+browser address bar suggestions of the old `:port` URL during tests.
+
+## Let's Encrypt Gateway certificates and native Workspace app (BYOD)
+Symptom: browser and HTML5 work, but Workspace app (native or hybrid) fails right away with
+`SSL Error 65: SSL_STATUS_X509ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY` and never asks for the smart card PIN.
+Lab 2026-10-24: remote worker Windows Server 2022, Workspace app 26.3.20.31.
+Cause: Let's Encrypt's Y generation chain is `leaf <- YR2 <- Root YR <- ISRG Root X1` (Root YR is not yet in the
+major trust stores; Let's Encrypt's default chain carries Root YR cross-signed by ISRG Root X1). Workspace app checks
+against the Windows machine root store, and Windows adds a trusted root there only when the Windows certificate
+chain engine (CryptoAPI) requests it (Automatic Root Update). Browsers use their own root store and never trigger
+that, so a fresh or rarely used device can lack `ISRG Root X1` although the store opens fine in the browser.
+Recommendation:
+- Gateway (server side): send the full chain including the **Root YR cross-signed by ISRG Root X1**
+  (`link ssl certKey <YR2> <Root YR by X1>`), so every client that trusts X1 can build the chain. Never end the
+  chain at the self-signed Root YR.
+- Managed devices: distribute `ISRG Root X1` (GPO / Intune) or make sure Automatic Root Update is allowed
+  (GPO "Turn off Automatic Root Certificates Update" not enabled, `ctldl.windowsupdate.com` reachable).
+- BYOD / unmanaged devices: in the user guide, one command that lets Windows install the root itself (no admin):
+  `certutil -urlfetch -verify root-yr-by-x1.pem` (file from letsencrypt.org/certificates); afterwards
+  `CN=ISRG Root X1` is in `Cert:\LocalMachine\Root`. Verified on the remote worker; the next launch worked.
+- Check: `Get-ChildItem Cert:\LocalMachine\Root | ? Subject -match 'ISRG'`.

@@ -71,7 +71,9 @@ The Client application must have that exact URL as SPA redirect URI. `scripts/Ex
 | CVAD / Delivery Controller / StoreFront | 2607 LTSR |
 | VDA | 2607 LTSR on Windows Server 2025 (build >= 26100.32230), Entra hybrid joined |
 | NetScaler | 14.1 (Gateway with nFactor OIDC to Entra, token rewrite to StoreFront) |
-| Workspace app | Windows 2607 (64-bit), macOS 2609 |
+| Workspace app | Windows 2607.1 LTSR (26.7.1.4), 2607 (26.7.0.269) and 26.3.20.31, macOS 2609 (26.09.0.17) |
+| Citrix Web Extension | 26.1.6 (Edge / Chrome); hybrid launches need the store on port 443 |
+| NetScaler Gateway | OIDC to Entra, optional mTLS (`clientCert Mandatory`) verified for HTML5 and hybrid |
 
 Not covered: Citrix DaaS / Citrix Cloud (own Citrix documentation), Entra joined (cloud-only) VDAs on CVAD
 (not supported by Citrix on-premises), FAS.
