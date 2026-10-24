@@ -23,7 +23,10 @@ enrollment onto YubiKey PIV (5 NFC fw 5.1.2, 5C Nano fw 5.7.4), CRL check on the
 - `New-EntraSsoConditionalAccess.ps1`: `includeAllUsers: true` as an explicit opt-in for All users (instead of
   `includeGroups`; both together are refused); the user scope is part of the NoChange comparison. First run against a
   tenant (lab, 2026-10-25): policy created and enforced - All users, Citrix-Workspace-Resource, phishing-resistant
-  MFA, sign-in frequency 1 h.
+  MFA, sign-in frequency 1 h. Verified with a W11 hybrid launch through the mTLS Gateway: after the sign-in frequency
+  the launch pop-up asks to sign in again ("Your organizational policy requires you to sign in again after a certain
+  time period"). Entra offers the account's default method first (password, which alone does not satisfy the
+  strength) and then Windows Hello; "Sign in another way" goes straight to a phishing-resistant method.
 - README: the note that the Conditional Access script was never run against a tenant is removed.
 
 Not included: OCSP (step-ca has no responder), self-service enrollment, enrollment on macOS.
