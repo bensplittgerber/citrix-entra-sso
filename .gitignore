@@ -1,6 +1,10 @@
 # local configs with real names / IDs never go into this repo
 config/*.local.json
 config/*.local.psd1
+netscaler/*.local.json
+
+# certificate and key files for netscaler/09 and 12 (Deploy-NsCertificates.ps1)
+certs/
 
 # exports of a live environment (scripts/Export-EntraSsoConfig.ps1)
 exports/

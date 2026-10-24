@@ -1,0 +1,14 @@
+{
+  "nsip": "https://192.0.2.10",
+
+  "comment": "OPTIONAL (mTLS): client CA certificates as CA certkeys. netscaler-nitro Deploy-NsCertificates.ps1 BEFORE 12-entra-sso-mtls.json. Public certificates only (no key). Use a dedicated client CA whose certificates carry EKU clientAuth only - a CA that also issues server certificates would let those log in.",
+
+  "certificates": [
+    { "name": "client_ca_root",
+      "certFile": "../certs/client-ca-root.crt" },
+
+    { "name": "client_ca_issuing",
+      "certFile": "../certs/client-ca-issuing.crt",
+      "linkTo": "client_ca_root" }
+  ]
+}

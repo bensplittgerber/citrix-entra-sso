@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased (v1.1.0)
+
+End-to-end deployment with the companion repositories (ROADMAP v1.1). Not yet validated on a fresh VPX.
+
+### Added
+- `netscaler/` object files for netscaler-nitro (>= v1.2.0), from the tested lab Gateway, placeholders only:
+  - `10-entra-sso-aaa.json`: OAuth action to Entra with explicit endpoints (no `metadataurl` / `userinfourl`),
+    user name `oid`, PKCE, RS256; policy label; factor 1 `NO_AUTHN`; non-addressable AAA vserver; authentication
+    profile.
+  - `11-entra-sso-gateway.json`: Gateway vserver on 443 (ICA only), SSL and HTTP (WebSocket) profile, session
+    policy to the StoreFront store with SSO, rewrite `X-Citrix-OIDC-Access-Token` = `AAA.USER.ATTRIBUTE("accesstoken")`
+    on `gatewayauth/login` / `citrixagbasic/authenticate`, STA, certificate bindings.
+  - `12-entra-sso-mtls.json` + `12-entra-sso-mtls-certs.json` (optional): client CA certkeys and bindings, SSL
+    profile `clientAuth ENABLED` / `clientCert Mandatory`, factor 1 rule `CLIENT.SSL.CLIENT_CERT.EXISTS`.
+  - `09-entra-sso-gateway-cert.json`: Gateway certificate with the Let's Encrypt chain up to Root YR cross-signed
+    by ISRG Root X1 (when no ACME client installs it).
+- `scripts/Set-BrokerSiteEntraSso.ps1`: idempotent `AzureSSOnClientId`, `AzureSSOnAuthorizeUrl`,
+  `AzureSSOnRedirectUrl` from the config file over remoting to the Delivery Controller, `-WhatIf`, prints the
+  previous values as a `Set-BrokerSite` command, reports `AzureSSOnResourceAppId`.
+- `docs/deployment.md`: runbook from the VPX (netscaler-vpx-deploy) over base config and certificate
+  (netscaler-nitro, ACME client), Entra, NetScaler, StoreFront and Broker to the export check; minimum versions;
+  way back per step.
+
+### Changed
+- `.gitignore`: `netscaler/*.local.json` and `certs/`.
+
 ## v1.0.1 - 2026-10-24
 
 Documentation only, no script changes.

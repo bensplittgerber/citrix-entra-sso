@@ -1,0 +1,34 @@
+{
+  "nsip": "https://192.0.2.10",
+
+  "steps": [
+    { "comment": "OPTIONAL: mTLS on the Entra SSO Gateway - client certificate mandatory, certificate check as factor 1",
+      "note": "netscaler-nitro >= v1.2.0, after 10 + 11 and after the client CA certkeys (12-entra-sso-mtls-certs.json with Deploy-NsCertificates.ps1). The client CA itself (issuing, enrollment, CRL) is not part of this repo. Verified for HTML5 and hybrid launches; native Workspace app cannot add an account on a Gateway that requires a client certificate. StoreFront cannot present a client certificate: use a separate callback vserver (netscaler-nitro examples/06-callback.json) as config storeFront.callbackUrl." },
+
+    { "comment": "Client CA chain on the Gateway (only these CAs are accepted)",
+      "note": "With a CRL of the issuing CA on the NetScaler add \"crlcheck\": \"Mandatory\" to the issuing CA binding (add ssl crl needs the CRL file first - not part of this file)." },
+    { "resource": "sslvserver_sslcertkey_binding", "data": {
+        "vservername": "gw_example_entrasso", "certkeyname": "client_ca_issuing", "ca": true } },
+    { "resource": "sslvserver_sslcertkey_binding", "data": {
+        "vservername": "gw_example_entrasso", "certkeyname": "client_ca_root", "ca": true } },
+
+    { "comment": "SSL profile: ssl_prof_entrasso_fe + client certificate mandatory, only the bound CA chain" },
+    { "resource": "sslprofile", "data": {
+        "name": "ssl_prof_entrasso_fe_mtls",
+        "ssl3": "DISABLED", "tls1": "DISABLED", "tls11": "DISABLED", "tls12": "ENABLED", "tls13": "ENABLED",
+        "denysslreneg": "NONSECURE",
+        "sessreuse": "ENABLED", "sesstimeout": 120,
+        "hsts": "ENABLED", "maxage": 15552000, "includesubdomains": "NO", "preload": "NO",
+        "clientauth": "ENABLED", "clientcert": "Mandatory", "clientauthuseboundcachain": "ENABLED" } },
+    { "resource": "sslvserver", "method": "PUT", "data": {
+        "vservername": "gw_example_entrasso", "sslprofile": "ssl_prof_entrasso_fe_mtls" } },
+
+    { "comment": "Factor 1: certificate check WITHOUT user name (NO_AUTHN) -> next factor lbl_entrasso (Entra OIDC)",
+      "note": "Changes the rule of auth_pol_entrasso_factor1 from 10-entra-sso-aaa.json. No certAction here: a user name from the certificate (UPN) would win over the Entra oid and StoreFront refuses SSO. The certificate and the Entra user are not compared with each other." },
+    { "resource": "authenticationpolicy", "method": "PUT", "data": {
+        "name": "auth_pol_entrasso_factor1", "rule": "CLIENT.SSL.CLIENT_CERT.EXISTS" } },
+
+    { "comment": "Way back (the two PUT steps above are [MANUAL] for undo) - run BEFORE Undo-NsObjects.ps1 of this file",
+      "note": "set authentication policy auth_pol_entrasso_factor1 -rule true ; set ssl vserver gw_example_entrasso -sslProfile ssl_prof_entrasso_fe ; then Undo-NsObjects.ps1 -Journal <journal of this file> removes the CA bindings and ssl_prof_entrasso_fe_mtls." }
+  ]
+}

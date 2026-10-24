@@ -1,0 +1,19 @@
+{
+  "nsip": "https://192.0.2.10",
+
+  "comment": "Gateway server certificate with the full chain, netscaler-nitro Deploy-NsCertificates.ps1 BEFORE 11-entra-sso-gateway.json. Skip this file if an ACME client installs the certkey gateway_example_org itself. Let's Encrypt Y generation: leaf <- YR1/YR2 <- Root YR cross-signed by ISRG Root X1 (from the full chain of the ACME order) - never end the chain at the self-signed Root YR, Workspace app builds it to ISRG Root X1. Certificate and key files stay outside the repo (certs/ is git-ignored); never put the key password on a command line.",
+
+  "certificates": [
+    { "name": "le_root_yr_x1",
+      "certFile": "../certs/root-yr-by-isrg-root-x1.crt" },
+
+    { "name": "le_yr_intermediate",
+      "certFile": "../certs/yr-intermediate.crt",
+      "linkTo": "le_root_yr_x1" },
+
+    { "name": "gateway_example_org",
+      "certFile": "../certs/gateway.example.org.crt",
+      "keyFile": "../certs/gateway.example.org.key",
+      "linkTo": "le_yr_intermediate" }
+  ]
+}

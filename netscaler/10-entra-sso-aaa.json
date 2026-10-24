@@ -1,0 +1,53 @@
+{
+  "nsip": "https://192.0.2.10",
+
+  "steps": [
+    { "comment": "Entra SSO without FAS - AAA part: OIDC to the Entra Client application, nFactor, authentication profile",
+      "note": "netscaler-nitro >= v1.2.0: Deploy-NsObjects.ps1 -ConfigFile ./netscaler/10-entra-sso-aaa.json. Prerequisites: features SSL, SSLVPN, AAA, REWRITE enabled; DNS resolver for login.microsoftonline.com (netscaler-nitro examples/00-prereq.json). The Entra Client application comes from scripts/New-EntraSsoClientApp.ps1 -NewSecret; its secret is only in $env:OIDC_ENTRASSO_CLIENT_SECRET (config entraApp.secretEnvVar) of THAT PowerShell session - deploy from the same session. Replace <tenant-id> / <client-app-id> with config tenantId / clientAppId." },
+
+    { "comment": "OAuth action: Entra OIDC with explicit endpoints",
+      "note": "NO metadataurl and NO userinfourl: with metadataurl the action takes the Graph userinfo endpoint, which has no oid, and the user name falls back to the UPN. usernamefield MUST be oid: StoreFront Entra SSO rejects a UPN ('... is not an Entra OID (GUID format)'). RS256 only. The same app is the Citrix Client application (Broker AzureSSOnClientId)." },
+    { "resource": "authenticationoauthaction", "data": {
+        "name": "oauth_act_entrasso",
+        "oauthtype": "GENERIC",
+        "authorizationendpoint": "https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/authorize",
+        "tokenendpoint": "https://login.microsoftonline.com/<tenant-id>/oauth2/v2.0/token",
+        "certendpoint": "https://login.microsoftonline.com/<tenant-id>/discovery/v2.0/keys",
+        "issuer": "https://login.microsoftonline.com/<tenant-id>/v2.0",
+        "audience": "<client-app-id>",
+        "clientid": "<client-app-id>",
+        "clientsecret": "${env:OIDC_ENTRASSO_CLIENT_SECRET}",
+        "usernamefield": "oid",
+        "attribute1": "email", "attribute2": "family_name", "attribute3": "given_name", "attribute4": "upn", "attribute5": "groups",
+        "authentication": "ENABLED",
+        "pkce": "ENABLED",
+        "tokenendpointauthmethod": "client_secret_post",
+        "allowedalgorithms": ["RS256"] } },
+    { "resource": "authenticationpolicy", "data": {
+        "name": "auth_pol_entrasso", "rule": "true", "action": "oauth_act_entrasso" } },
+
+    { "comment": "Policy label with the OIDC policy (the Entra factor)" },
+    { "resource": "authenticationloginschema", "data": {
+        "name": "lschema_entrasso_noschema", "authenticationschema": "noschema" } },
+    { "resource": "authenticationpolicylabel", "data": {
+        "labelname": "lbl_entrasso", "loginschema": "lschema_entrasso_noschema" } },
+    { "resource": "authenticationpolicylabel_authenticationpolicy_binding", "data": {
+        "labelname": "lbl_entrasso", "policyname": "auth_pol_entrasso",
+        "priority": 100, "gotopriorityexpression": "NEXT" } },
+
+    { "comment": "Factor 1: no user name, only routes to the Entra factor (NO_AUTHN)",
+      "note": "Rule true without mTLS. 12-entra-sso-mtls.json changes this rule to CLIENT.SSL.CLIENT_CERT.EXISTS. Factor 1 must never set a user name (no certAction): nFactor keeps the first user name, and StoreFront then gets a UPN instead of the Entra oid and refuses SSO." },
+    { "resource": "authenticationpolicy", "data": {
+        "name": "auth_pol_entrasso_factor1", "rule": "true", "action": "NO_AUTHN" } },
+
+    { "comment": "AAA vserver (non-addressable) + authentication profile",
+      "note": "No authenticationhost: login and /oauth/login run on the Gateway vserver (11-entra-sso-gateway.json). The Gateway certificate is bound to this vserver in 11." },
+    { "resource": "authenticationvserver", "data": {
+        "name": "aaa_entrasso", "servicetype": "SSL", "ipv46": "0.0.0.0", "port": 0 } },
+    { "resource": "authenticationvserver_authenticationpolicy_binding", "data": {
+        "name": "aaa_entrasso", "policy": "auth_pol_entrasso_factor1",
+        "priority": 100, "gotopriorityexpression": "NEXT", "nextfactor": "lbl_entrasso" } },
+    { "resource": "authenticationauthnprofile", "data": {
+        "name": "authnprof_entrasso", "authnvsname": "aaa_entrasso" } }
+  ]
+}

@@ -118,8 +118,9 @@ Not covered: Citrix DaaS / Citrix Cloud (own Citrix documentation), Entra joined
 | Path | Content |
 |---|---|
 | `scripts/` | PowerShell: export of the current config, idempotent setup per component, validation |
+| `netscaler/` | JSON object files for [netscaler-nitro](https://github.com/bensplittgerber/netscaler-nitro) (>= v1.2.0): Entra OIDC nFactor, Gateway on 443 with token rewrite, optional mTLS |
 | `config/` | `example.json` with placeholders; real values go into `*.local.json` (git-ignored) |
-| `docs/` | [architecture](docs/architecture.md), troubleshooting signatures, client matrix, limitations, [ROADMAP](docs/ROADMAP.md) (v1.1: end-to-end deployment with netscaler-nitro and netscaler-vpx-deploy), [release steps](docs/release.md) |
+| `docs/` | [end-to-end deployment](docs/deployment.md), [architecture](docs/architecture.md), troubleshooting signatures, client matrix, limitations, [ROADMAP](docs/ROADMAP.md) (v1.1: end-to-end deployment with netscaler-nitro and netscaler-vpx-deploy), [release steps](docs/release.md) |
 
 ## Conventions
 Placeholders only (`example.org`, `192.0.2.x`, `<tenant-id>`). No secrets in files or on command lines: client

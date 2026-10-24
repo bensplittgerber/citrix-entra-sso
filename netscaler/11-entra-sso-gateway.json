@@ -1,0 +1,82 @@
+{
+  "nsip": "https://192.0.2.10",
+
+  "steps": [
+    { "comment": "Entra SSO without FAS - Gateway vserver on 443 (ICA proxy) to the Entra SSO store",
+      "note": "netscaler-nitro >= v1.2.0, after 10-entra-sso-aaa.json. Prerequisites: Gateway certkey gateway_example_org with the full chain (09-entra-sso-gateway-cert.json or an ACME client; Let's Encrypt: link the intermediate to Root YR cross-signed by ISRG Root X1), StoreFront store set up by scripts/Set-StoreFrontEntraSso.ps1. Port 443 is required for hybrid launches: the Citrix Web Extension (26.1.6) store URL pattern has no port." },
+
+    { "comment": "Frontend SSL profile + HTTP profile (WebSocket for HTML5)",
+      "note": "sslprofile needs 'set ssl parameter -defaultProfile ENABLED' (netscaler-nitro examples/00-prereq.json). HSTS preload stays NO." },
+    { "resource": "sslprofile", "data": {
+        "name": "ssl_prof_entrasso_fe",
+        "ssl3": "DISABLED", "tls1": "DISABLED", "tls11": "DISABLED", "tls12": "ENABLED", "tls13": "ENABLED",
+        "denysslreneg": "NONSECURE",
+        "sessreuse": "ENABLED", "sesstimeout": 120,
+        "hsts": "ENABLED", "maxage": 15552000, "includesubdomains": "NO", "preload": "NO" } },
+    { "resource": "nshttpprofile", "data": {
+        "name": "nshttp_entrasso_websocket",
+        "dropinvalreqs": "ENABLED", "markhttp09inval": "ENABLED", "markconnreqinval": "ENABLED",
+        "marktracereqinval": "ENABLED", "markrfc7230noncompliantinval": "ENABLED",
+        "markhttpheaderextrawserror": "ENABLED", "allowonlywordcharactersandhyphen": "ENABLED",
+        "hostheadervalidation": "ENABLED", "websocket": "ENABLED" } },
+
+    { "comment": "Session action + policy: ICA proxy to the Entra SSO store (Store Web of config storeWebVirtualPath)",
+      "note": "wihome / storefronturl = the StoreFront server (or its load balancer) as the NetScaler reaches it. sso ON + ssocredential PRIMARY: the Gateway passes the logon (Entra oid) to StoreFront, the token comes with the rewrite below." },
+    { "resource": "vpnsessionaction", "data": {
+        "name": "sess_act_entrasso",
+        "transparentinterception": "OFF", "defaultauthorizationaction": "ALLOW",
+        "sso": "ON", "ssocredential": "PRIMARY", "icaproxy": "ON", "clientlessvpnmode": "OFF", "clientchoices": "OFF",
+        "wihome": "https://sf01.example.org/Citrix/StoreWeb",
+        "storefronturl": "https://sf01.example.org" } },
+    { "resource": "vpnsessionpolicy",
+      "data": { "name": "sess_pol_entrasso", "rule": "true", "action": "sess_act_entrasso" } },
+
+    { "comment": "Entra access token to StoreFront: X-Citrix-OIDC-Access-Token on the Gateway authentication calls",
+      "note": "StoreFront Entra SSO reads the token from this header on /gatewayauth/login (Workspace app) and /citrixagbasic/authenticate (web). Needs the REWRITE feature." },
+    { "resource": "rewriteaction", "data": {
+        "name": "rw_act_entrasso_token", "type": "insert_http_header",
+        "target": "X-Citrix-OIDC-Access-Token", "stringbuilderexpr": "AAA.USER.ATTRIBUTE(\"accesstoken\")" } },
+    { "resource": "rewritepolicy", "data": {
+        "name": "rw_pol_entrasso_token",
+        "rule": "HTTP.REQ.URL.TO_LOWER.ENDSWITH(\"gatewayauth/login\") || HTTP.REQ.URL.TO_LOWER.ENDSWITH(\"citrixagbasic/authenticate\")",
+        "action": "rw_act_entrasso_token" } },
+
+    { "comment": "Gateway vserver (DOWN until the certificate is bound at the end of this file)" },
+    { "resource": "vpnvserver", "data": {
+        "name": "gw_example_entrasso", "servicetype": "SSL", "ipv46": "192.0.2.17", "port": 443,
+        "icaonly": "ON", "dtls": "OFF", "downstateflush": "DISABLED", "listenpolicy": "NONE",
+        "httpprofilename": "nshttp_entrasso_websocket", "authnprofile": "authnprof_entrasso" } },
+    { "resource": "vpnvserver_staserver_binding",
+      "data": { "name": "gw_example_entrasso", "staserver": "https://ddc01.example.org" },
+      "note": "Same Delivery Controllers as config storeFront.staUrls. STA shows DOWN for up to ~1 minute after the vserver is created - normal." },
+    { "resource": "vpnvserver_vpnsessionpolicy_binding", "data": {
+        "name": "gw_example_entrasso", "policy": "sess_pol_entrasso",
+        "priority": 100, "gotopriorityexpression": "NEXT", "bindpoint": "REQUEST" } },
+    { "resource": "vpnvserver_rewritepolicy_binding", "data": {
+        "name": "gw_example_entrasso", "policy": "rw_pol_entrasso_token",
+        "priority": 100, "gotopriorityexpression": "END", "bindpoint": "REQUEST" } },
+
+    { "comment": "Built-in cache policies" },
+    { "resource": "vpnvserver_cachepolicy_binding", "data": { "name": "gw_example_entrasso",
+        "policy": "_cacheTCVPNStaticObjects", "priority": 10, "gotopriorityexpression": "END", "bindpoint": "REQUEST" } },
+    { "resource": "vpnvserver_cachepolicy_binding", "data": { "name": "gw_example_entrasso",
+        "policy": "_cacheOCVPNStaticObjects", "priority": 20, "gotopriorityexpression": "END", "bindpoint": "REQUEST" } },
+    { "resource": "vpnvserver_cachepolicy_binding", "data": { "name": "gw_example_entrasso",
+        "policy": "_cacheVPNStaticObjects", "priority": 30, "gotopriorityexpression": "END", "bindpoint": "REQUEST" } },
+    { "resource": "vpnvserver_cachepolicy_binding", "data": { "name": "gw_example_entrasso",
+        "policy": "_mayNoCacheReq", "priority": 40, "gotopriorityexpression": "END", "bindpoint": "REQUEST" } },
+    { "resource": "vpnvserver_cachepolicy_binding", "data": { "name": "gw_example_entrasso",
+        "policy": "_cacheWFStaticObjects", "priority": 10, "gotopriorityexpression": "END", "bindpoint": "RESPONSE" } },
+    { "resource": "vpnvserver_cachepolicy_binding", "data": { "name": "gw_example_entrasso",
+        "policy": "_noCacheRest", "priority": 20, "gotopriorityexpression": "END", "bindpoint": "RESPONSE" } },
+
+    { "comment": "SSL profile + Gateway certificate (also on the AAA vserver)",
+      "note": "An ACME client that binds the certificate itself (e.g. to both vservers) makes the two certkey bindings [EXISTS]." },
+    { "resource": "sslvserver", "method": "PUT", "data": {
+        "vservername": "gw_example_entrasso", "sslprofile": "ssl_prof_entrasso_fe" } },
+    { "resource": "sslvserver_sslcertkey_binding", "data": {
+        "vservername": "gw_example_entrasso", "certkeyname": "gateway_example_org" } },
+    { "resource": "sslvserver_sslcertkey_binding", "data": {
+        "vservername": "aaa_entrasso", "certkeyname": "gateway_example_org" } }
+  ]
+}
