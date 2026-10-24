@@ -5,6 +5,17 @@ NetScaler Gateway (OIDC) -> StoreFront -> Entra hybrid joined VDAs (CVAD 2607 LT
 
 Status: work in progress. Verified end to end in a lab; the PowerShell automation is being built.
 
+> [!IMPORTANT]
+> **One Gateway / store per Citrix site.** The Entra SSO settings (`AzureSSOn*`: Client application, authorize URL
+> with the tenant, redirect URL) are **site-wide** Broker settings, and the redirect URL must be the Store Web URL the
+> browser sees. A Citrix site therefore gives browser (HTML5) and hybrid launches Entra SSO for **one Gateway URL + store
+> and one Entra tenant**. Every other Gateway or store on the same site falls back to the Windows logon screen.
+> **Service providers** running several customers (Gateways, stores, Entra tenants) on one shared site can offer Entra
+> SSO without FAS to **one** of them only; the others need their own Citrix site or stay on FAS. Verified in the lab:
+> with the site pointed at a second Gateway, the first store's pop-up was sent to the second Gateway's store.
+> A "multi tenant Entra ID store" mode exists in the HTML5 client (log message on mismatch) but was not found to work
+> on-premises. Details: [Limitation: one Entra SSO store origin per site](#limitation-one-entra-sso-store-origin-per-site).
+
 ## What this repo adds to the Citrix documentation
 - **`AzureSSOnRedirectUrl` (Broker site, site-wide) must be the Store Web URL exactly as the browser sees it,
   with a trailing slash**, e.g. `https://gateway.example.org/Citrix/StoreWeb/`. The CVAD 2607 page only says it
