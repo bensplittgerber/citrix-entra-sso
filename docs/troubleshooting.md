@@ -69,3 +69,17 @@ therefore hides the Entra `oid`; use a certificate check without a user name (`-
 `CLIENT.SSL.CLIENT_CERT.EXISTS`) as factor 1. The certificate is still enforced by the SSL profile. Note: certificate
 and Entra user are then no longer coupled (add a UPN comparison). Native Workspace app cannot add an account on a
 Gateway that requires a client certificate; only browser / hybrid launches.
+
+## Browser launches on the LAN: Local Network Access (Chromium)
+On the LAN the Gateway FQDN resolves to a private address. The silent Entra request of the HTML5 client
+(`prompt=none`, hidden iframe) returns from `login.microsoftonline.com` to the store URL; Edge/Chrome block that with
+`ERR_BLOCKED_BY_LOCAL_NETWORK_ACCESS_CHECKS` (Local Network Access: a public page may not load a private address in
+an iframe). msal then falls back to an interactive pop-up, which works -> SSO succeeds, but slower and only with
+pop-ups allowed. From outside (Gateway FQDN = public address) the log shows no such block (external test 2026-10-24).
+
+## Clients behind a TLS-inspecting proxy (e.g. Zscaler SSL inspection)
+External test through Zscaler (2026-10-24): the store and the Entra part work - HTML5 log `Received AAD token
+successfully from MSAL` - but the HDX connection fails: HTML5 log `WebSocket connection failed with error code 1006`,
+Edge net-export `WEBSOCKET_UPGRADE_FAILURE` / `ERR_INVALID_RESPONSE` towards the Gateway. This is the proxy, not Entra
+SSO. Fix on the proxy side: exclude the Gateway FQDN from SSL inspection (and allow WebSockets). A Gateway that
+requires a client certificate (mTLS) cannot work through SSL inspection at all.
