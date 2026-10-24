@@ -112,6 +112,7 @@ Copy the object files and replace the placeholders (`netscaler/*.local.json` is 
 | [11-entra-sso-gateway.json](../netscaler/11-entra-sso-gateway.json) | `Deploy-NsObjects.ps1` | SSL + HTTP profile, session policy (StoreFront, SSO), rewrite `X-Citrix-OIDC-Access-Token`, Gateway vserver on 443 (ICA only), STA, certificate |
 | [12-entra-sso-mtls-certs.json](../netscaler/12-entra-sso-mtls-certs.json) | `Deploy-NsCertificates.ps1` | optional: client CA certkeys |
 | [12-entra-sso-mtls.json](../netscaler/12-entra-sso-mtls.json) | `Deploy-NsObjects.ps1` | optional: CA bindings, SSL profile `clientCert Mandatory`, factor 1 rule `CLIENT.SSL.CLIENT_CERT.EXISTS` |
+| [13-client-crl.cli](../netscaler/13-client-crl.cli) | NetScaler CLI | optional: CRL of the client issuing CA, `crlCheck Mandatory` ([client CA](client-ca.md)) |
 
 In the session of step 3:
 

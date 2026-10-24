@@ -52,5 +52,14 @@
     "signInFrequencyHours": null,
     "grant": "phishingResistant",
     "signInFrequency": null
+  },
+  "clientCa": {
+    "stepContext": "example-client",
+    "rootFingerprint": "<sha256 of the client root>",
+    "issuerName": "Example Client Issuing CA",
+    "crlUrl": "http://pki.example.org/client/crl",
+    "provisioner": "client-admin",
+    "netscalerCrlName": "crl_client_issuing",
+    "renewWithinDays": 21
   }
 }

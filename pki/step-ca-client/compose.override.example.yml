@@ -1,0 +1,12 @@
+# Client CA next to an existing compose project (e.g. the server step-ca + nginx). No DOCKER_STEPCA_INIT_* variables:
+# the image's auto-init prints the generated provisioner password into `docker logs` (docs/client-ca.md).
+services:
+  step-ca-client:
+    image: smallstep/step-ca:0.30.2
+    container_name: step-ca-client
+    restart: unless-stopped
+    volumes:
+      - ./step-client:/home/step
+    ports:
+      # enrollment workstations only: LAN IP, no internet port forward
+      - "192.0.2.186:9444:9000"

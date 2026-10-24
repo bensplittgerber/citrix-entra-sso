@@ -1,0 +1,31 @@
+{
+	"root": "/home/step/certs/root_ca.crt",
+	"crt": "/home/step/certs/intermediate_ca.crt",
+	"key": "/home/step/secrets/intermediate_ca_key",
+	"address": ":9000",
+	"dnsNames": ["ca-client.example.org", "step-ca-client", "localhost"],
+	"commonName": "Example Client CA (internal TLS)",
+	"logger": { "format": "text" },
+	"db": {
+		"type": "badgerv2",
+		"dataSource": "/home/step/db"
+	},
+	"crl": {
+		"enabled": true,
+		"generateOnRevoke": true,
+		"cacheDuration": "72h0m0s",
+		"renewPeriod": "24h0m0s",
+		"idpURL": "http://pki.example.org/client/crl"
+	},
+	"authority": {
+		"enableAdmin": false,
+		"policy": {
+			"x509": {
+				"allow": { "email": ["@example.org"] },
+				"allowWildcardNames": false
+			}
+		},
+		"provisioners": [],
+		"backdate": "1m0s"
+	}
+}

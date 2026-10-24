@@ -47,9 +47,13 @@ Validation: a fresh VPX built only from these steps; HTML5 and hybrid launches w
 NetScaler part through the netscaler-nitro journal. The release ships with a compatibility table of the repository
 versions it was tested with.
 
-## v1.2 (planned): client certificate authority for mTLS
-- Issuing user certificates for the Gateway client authentication (step-ca), enrollment onto smart cards / YubiKey
-  PIV, CRL / OCSP on the Gateway, renewal.
+## v1.2 (unreleased): client certificate authority for mTLS
+- Done: [docs/client-ca.md](client-ca.md) - step-ca client CA, enrollment onto YubiKey PIV
+  (`scripts/Enroll-YubiKeyPiv.ps1`), CRL on the Gateway (`netscaler/13-client-crl.cli`) with a public CRL
+  distribution point, revocation, renewal by re-enrollment.
+- Decided: CRL only - step-ca has no OCSP responder. Renewal stays disabled on the CA.
+- Later: self-service enrollment (OIDC provisioner bound to the signed-in Entra user), re-enrollment inside an HDX
+  session, enforced PIN change after the enrollment.
 
 ## v1.3 (idea): more than one Entra SSO store per site - NetScaler response rewrite (unsupported workaround)
 Idea: the site-wide `AzureSSOn*` values travel Broker -> StoreFront (direct) and then StoreFront -> client **inside

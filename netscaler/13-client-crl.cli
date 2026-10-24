@@ -1,0 +1,33 @@
+# OPTIONAL (mTLS): CRL of the client issuing CA for the Gateway (docs/client-ca.md). NetScaler CLI (">" prompt, not
+# the shell), after 12-entra-sso-mtls-certs.json + 12-entra-sso-mtls.json (CA certKeys client_ca_root +
+# client_ca_issuing linked, both bound to gw_example_entrasso as CA certificates).
+#
+# Order matters: an HTTP CRL added WITHOUT an existing local file ends in "Last Update: Failed, the CRL is
+# incomplete" (status Undefined) although the download works. So: download the file, add it as file CRL, then switch
+# on the HTTP refresh. step-ca's CRL (ECDSA signature, critical Issuing Distribution Point) is accepted as is.
+# The NetScaler fetches the CRL itself: the NSIP must resolve and reach pki.example.org on port 80.
+
+shell curl -s -o /var/netscaler/ssl/client_ca_issuing.crl http://pki.example.org/client/crl && ls -la /var/netscaler/ssl/client_ca_issuing.crl
+add ssl crl crl_client_issuing client_ca_issuing.crl -inform DER -CAcert client_ca_issuing
+set ssl crl crl_client_issuing -refresh ENABLED -method HTTP -url http://pki.example.org/client/crl -port 80 -interval DAILY -time 03:00
+set ssl crl crl_client_issuing -interval NOW
+
+# Revocation check on the issuing CA (it signs the user certificates). Mandatory = no valid CRL, no logon.
+# step-ca has no OCSP responder, so -ocspCheck is not used. 12-entra-sso-mtls.json binds the issuing CA without a
+# check; a second bind with -crlCheck fails ("Resource already exists"), so unbind + bind (verified on 14.1-73.46).
+# Between the two lines the Gateway has no issuing CA and refuses client certificates: run them together.
+unbind ssl vserver gw_example_entrasso -certkeyName client_ca_issuing -CA
+bind ssl vserver gw_example_entrasso -certkeyName client_ca_issuing -CA -crlCheck Mandatory
+save ns config
+
+# check: Status Valid, Refresh ENABLED, Last Update Successful, Next_update in the future, revoked serials listed
+show ssl crl crl_client_issuing
+show ssl vserver gw_example_entrasso   # client_ca_issuing: CRLCheck: Mandatory
+
+# after a revoke (step ca revoke): fetch now instead of waiting for 03:00
+# set ssl crl crl_client_issuing -interval NOW
+
+# undo: back to no CRL check, then remove the CRL (before rm ssl certKey client_ca_issuing)
+# unbind ssl vserver gw_example_entrasso -certkeyName client_ca_issuing -CA
+# bind ssl vserver gw_example_entrasso -certkeyName client_ca_issuing -CA
+# rm ssl crl crl_client_issuing

@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased (v1.2.0)
+
+Client certificate authority for the optional mTLS Gateway (ROADMAP v1.2). Lab-verified: step-ca client CA,
+enrollment onto YubiKey PIV (5 NFC fw 5.1.2, 5C Nano fw 5.7.4), CRL check on the Gateway, revocation, public CRL.
+
+### Added
+- `docs/client-ca.md`: dedicated step-ca client CA (clientAuth only, own root, key offline, name policy, renewal
+  disabled), setup without auto-init, public CRL distribution point over HTTP, enrollment on behalf with a one-time
+  token, NetScaler CRL, revocation, renewal by re-enrollment, limits.
+- `pki/step-ca-client/`: `ca.json.example` (CRL every 24 h and on revoke, valid 72 h), `client-auth.tpl` (CN = SAN
+  email = UPN otherName, EKU clientAuth, CDP), `compose.override.example.yml`, `nginx-client-crl.conf` (GET/HEAD only).
+- `scripts/Enroll-YubiKeyPiv.ps1`: enrollment on behalf - key generated on the YubiKey (minidriver, `certreq`), token
+  from `step ca token` in memory only, checks SAN / EKU / CDP / public key, finds the slot by fingerprint, prints the
+  revoke and CRL refresh commands for superseded certs, PIN handover; `-CheckOnly` (card inventory with days left),
+  `-RenewWithinDays`, `-CleanupStore` (stale revoked/expired copies in CurrentUser\My).
+- `netscaler/13-client-crl.cli`: CRL `crl_client_issuing` (file first, then daily HTTP refresh) and `crlCheck
+  Mandatory` on the issuing CA (unbind + bind: a second bind fails with "Resource already exists").
+- `config/example.json`: `clientCa` section.
+
+Not included: OCSP (step-ca has no responder), self-service enrollment, enrollment on macOS.
+
 ## Unreleased (v1.1.0)
 
 End-to-end deployment with the companion repositories (ROADMAP v1.1). Not yet validated on a fresh VPX.
