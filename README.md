@@ -9,6 +9,11 @@ Status: v1.0 - verified end to end in a lab (HTML5 and hybrid, also through an m
 ## Architecture
 ![Architecture overview: client, NetScaler Gateway, StoreFront, Delivery Controller, VDA and Entra ID with the 8 logon steps](docs/img/architecture-overview.svg)
 
+> [!NOTE]
+> **Validated:** HTML5 and hybrid browser-to-Workspace-app launches with mandatory NetScaler mTLS and FAS-free Entra
+> SSO. Direct native Workspace app store enrollment through an mTLS-only Gateway is not supported by this
+> implementation.
+
 Settings per component and where each step can break: [docs/architecture.md](docs/architecture.md).
 
 The user signs in **once** with Entra (passkey, Windows Hello or an existing Entra session; optionally behind a
