@@ -8,7 +8,9 @@
   need the store on port 443.
 
 ## Open for v1.0.x
-- Run `New-EntraSsoConditionalAccess.ps1` against a test group (report-only, then `-Enforce`) and document the result.
+- ~~Run `New-EntraSsoConditionalAccess.ps1` against a tenant~~ done 2026-10-25 (lab): All users, target
+  Citrix-Workspace-Resource, phishing-resistant MFA, sign-in frequency 1 h, `-Enforce`. Open: native Workspace app
+  launch with the enforced policy, screenshots for the client experience section.
 - mTLS Gateway: compare the certificate UPN with the Entra `upn` (certificate and Entra user are decoupled).
 
 ## v1.1 (in progress): end-to-end deployment with the companion repositories

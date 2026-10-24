@@ -6,7 +6,8 @@
 
 .DESCRIPTION
     Microsoft Graph only. Desired state from the config section "conditionalAccess" (see config/example.json):
-      - displayName, includeGroups (names, resolved to ids; required - the script never targets all users),
+      - displayName, includeGroups (names, resolved to ids) OR includeAllUsers = true (explicit opt-in, the policy
+        then targets All users - only sensible when the targeted apps are dedicated to Entra SSO),
         excludeUsers (UPNs, e.g. break-glass accounts), applications ("resource", "client" or app ids)
       - grant: built-in authentication strength - 'phishingResistant' (default, id ...0004) or 'mfa' (any MFA, ...0002)
       - optional sign-in frequency: signInFrequencyHours, or signInFrequency = 'everyTime' (re-authenticate every time)
@@ -31,7 +32,10 @@ $ErrorActionPreference = 'Stop'
 $cfg = Get-Content -Raw -LiteralPath $ConfigFile | ConvertFrom-Json
 $ca = $cfg.conditionalAccess
 if (-not $ca.displayName) { throw "conditionalAccess.displayName missing in $ConfigFile" }
-if (-not @($ca.includeGroups).Count) { throw 'conditionalAccess.includeGroups is empty - refusing to target all users.' }
+$allUsers = $ca.includeAllUsers -eq $true
+$groupCount = @($ca.includeGroups | Where-Object { $_ }).Count   # @($null).Count is 1 - count real entries only
+if ($allUsers -and $groupCount) { throw 'conditionalAccess: set includeGroups OR includeAllUsers, not both.' }
+if (-not $allUsers -and -not $groupCount) { throw 'conditionalAccess.includeGroups is empty - refusing to target all users (set includeAllUsers: true to do that on purpose).' }
 $phishingResistant = '00000000-0000-0000-0000-000000000004'
 
 $dryRun = -not $PSCmdlet.ShouldProcess("tenant $($cfg.tenantId)", "configure Conditional Access policy '$($ca.displayName)'")
@@ -67,7 +71,8 @@ $sifText = if ($ca.signInFrequency -eq 'everyTime') { 'everyTime' } elseif ($ca.
 $body = [ordered]@{
     displayName = $ca.displayName; state = $state
     conditions = @{
-        users = @{ includeGroups = $groupIds; excludeUsers = $excludeIds }
+        users = if ($allUsers) { @{ includeUsers = @('All'); includeGroups = @(); excludeUsers = $excludeIds } }
+                else { @{ includeUsers = @(); includeGroups = $groupIds; excludeUsers = $excludeIds } }
         applications = @{ includeApplications = $appIds }
         clientAppTypes = @('all')
     }
@@ -84,10 +89,10 @@ $pols = @((G GET "v1.0/identity/conditionalAccess/policies?`$filter=displayName 
 if ($pols.Count -gt 1) { throw "More than one policy named '$($ca.displayName)' - resolve manually." }
 $pol = $pols | Select-Object -First 1
 
-$desired = 'state={0} groups={1} excludeUsers={2} apps={3} strength={4} sif={5}' -f $state, (Sorted $groupIds), (Sorted $excludeIds), (Sorted $appIds), $strengthId, $sifText
+$desired = 'state={0} users={1} groups={2} excludeUsers={3} apps={4} strength={5} sif={6}' -f $state, $(if ($allUsers) { 'All' } else { '' }), (Sorted $groupIds), (Sorted $excludeIds), (Sorted $appIds), $strengthId, $sifText
 $current = if ($pol) {
     $sif = $pol.sessionControls.signInFrequency
-    'state={0} groups={1} excludeUsers={2} apps={3} strength={4} sif={5}' -f $pol.state, (Sorted $pol.conditions.users.includeGroups), (Sorted $pol.conditions.users.excludeUsers),
+    'state={0} users={1} groups={2} excludeUsers={3} apps={4} strength={5} sif={6}' -f $pol.state, (Sorted $pol.conditions.users.includeUsers), (Sorted $pol.conditions.users.includeGroups), (Sorted $pol.conditions.users.excludeUsers),
     (Sorted $pol.conditions.applications.includeApplications), $pol.grantControls.authenticationStrength.id,
     $(if (-not $sif.isEnabled) { '-' } elseif ($sif.frequencyInterval -eq 'everyTime') { 'everyTime' } else { "$($sif.value)h" })
 } else { '' }

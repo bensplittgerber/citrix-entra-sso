@@ -4,7 +4,7 @@ Single sign-on with Microsoft Entra ID to Citrix Virtual Apps and Desktops **wit
 NetScaler Gateway (OIDC) -> StoreFront -> Entra hybrid joined VDAs (CVAD 2607 LTSR).
 
 Status: v1.0 - verified end to end in a lab (HTML5 and hybrid, also through an mTLS Gateway). See
-[CHANGELOG](CHANGELOG.md); the Conditional Access script has not been run against a tenant yet.
+[CHANGELOG](CHANGELOG.md).
 
 ## Architecture
 ![Architecture overview: client, NetScaler Gateway, StoreFront, Delivery Controller, VDA and Entra ID with the 8 logon steps](docs/img/architecture-overview.svg)
