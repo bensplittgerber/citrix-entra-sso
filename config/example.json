@@ -49,6 +49,8 @@
     "applications": [
       "resource"
     ],
-    "signInFrequencyHours": null
+    "signInFrequencyHours": null,
+    "grant": "phishingResistant",
+    "signInFrequency": null
   }
 }

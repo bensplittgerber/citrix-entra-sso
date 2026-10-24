@@ -8,8 +8,8 @@
     Microsoft Graph only. Desired state from the config section "conditionalAccess" (see config/example.json):
       - displayName, includeGroups (names, resolved to ids; required - the script never targets all users),
         excludeUsers (UPNs, e.g. break-glass accounts), applications ("resource", "client" or app ids)
-      - grant: authentication strength "Phishing-resistant MFA" (built-in id 00000000-0000-0000-0000-000000000004)
-      - optional sign-in frequency in hours
+      - grant: built-in authentication strength - 'phishingResistant' (default, id ...0004) or 'mfa' (any MFA, ...0002)
+      - optional sign-in frequency: signInFrequencyHours, or signInFrequency = 'everyTime' (re-authenticate every time)
     Targets: Citrix documents (CVAD 2607, Entra SSO) to apply policies to the Citrix Resource application
     (Citrix-Workspace-Resource) only, not to the Client application. The default is therefore "resource". Adding
     "client" also covers the NetScaler OIDC login when the Client app doubles as the Gateway's OIDC app - a lab
@@ -57,6 +57,13 @@ $appIds = @(foreach ($a in @($ca.applications ?? @('resource'))) {
 if ($appIds -contains '' -or $appIds -contains $null) { throw 'An application placeholder resolved to an empty app id (clientAppId missing?)' }
 
 $state = if ($Enforce) { 'enabled' } else { 'enabledForReportingButNotEnforced' }
+# grant: built-in authentication strengths - 'phishingResistant' (default) or 'mfa' (any MFA, e.g. Authenticator push)
+$strengthId = switch ($ca.grant ?? 'phishingResistant') {
+    'phishingResistant' { $phishingResistant }
+    'mfa' { '00000000-0000-0000-0000-000000000002' }
+    default { throw "conditionalAccess.grant must be 'phishingResistant' or 'mfa'" }
+}
+$sifText = if ($ca.signInFrequency -eq 'everyTime') { 'everyTime' } elseif ($ca.signInFrequencyHours) { "$($ca.signInFrequencyHours)h" } else { '-' }
 $body = [ordered]@{
     displayName = $ca.displayName; state = $state
     conditions = @{
@@ -64,9 +71,12 @@ $body = [ordered]@{
         applications = @{ includeApplications = $appIds }
         clientAppTypes = @('all')
     }
-    grantControls = @{ operator = 'OR'; authenticationStrength = @{ id = $phishingResistant } }
+    grantControls = @{ operator = 'OR'; authenticationStrength = @{ id = $strengthId } }
 }
-if ($ca.signInFrequencyHours) {
+# sign-in frequency: hours (timeBased) or 'everyTime' (re-authentication on every token request)
+if ($ca.signInFrequency -eq 'everyTime') {
+    $body.sessionControls = @{ signInFrequency = @{ isEnabled = $true; frequencyInterval = 'everyTime' } }
+} elseif ($ca.signInFrequencyHours) {
     $body.sessionControls = @{ signInFrequency = @{ isEnabled = $true; type = 'hours'; value = [int]$ca.signInFrequencyHours; frequencyInterval = 'timeBased' } }
 }
 
@@ -74,11 +84,12 @@ $pols = @((G GET "v1.0/identity/conditionalAccess/policies?`$filter=displayName 
 if ($pols.Count -gt 1) { throw "More than one policy named '$($ca.displayName)' - resolve manually." }
 $pol = $pols | Select-Object -First 1
 
-$desired = 'state={0} groups={1} excludeUsers={2} apps={3} strength={4} sif={5}' -f $state, (Sorted $groupIds), (Sorted $excludeIds), (Sorted $appIds), $phishingResistant, ($ca.signInFrequencyHours ?? '-')
+$desired = 'state={0} groups={1} excludeUsers={2} apps={3} strength={4} sif={5}' -f $state, (Sorted $groupIds), (Sorted $excludeIds), (Sorted $appIds), $strengthId, $sifText
 $current = if ($pol) {
+    $sif = $pol.sessionControls.signInFrequency
     'state={0} groups={1} excludeUsers={2} apps={3} strength={4} sif={5}' -f $pol.state, (Sorted $pol.conditions.users.includeGroups), (Sorted $pol.conditions.users.excludeUsers),
     (Sorted $pol.conditions.applications.includeApplications), $pol.grantControls.authenticationStrength.id,
-    $(if ($pol.sessionControls.signInFrequency.isEnabled) { $pol.sessionControls.signInFrequency.value } else { '-' })
+    $(if (-not $sif.isEnabled) { '-' } elseif ($sif.frequencyInterval -eq 'everyTime') { 'everyTime' } else { "$($sif.value)h" })
 } else { '' }
 
 $action = if ($current -ceq $desired) { 'NoChange' } elseif ($dryRun) { if ($pol) { 'WouldUpdate' } else { 'WouldCreate' } } else { if ($pol) { 'Update' } else { 'Create' } }
