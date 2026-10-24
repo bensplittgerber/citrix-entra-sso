@@ -66,7 +66,7 @@ What has to fit together:
 > and one Entra tenant**. Every other Gateway or store on the same site falls back to the Windows logon screen.
 > **Service providers** running several customers (Gateways, stores, Entra tenants) on one shared site can offer Entra
 > SSO without FAS to **one** of them only; the others need their own Citrix site or stay on FAS. A possible
-> workaround for v1.1 is in the [ROADMAP](docs/ROADMAP.md).
+> workaround idea is in the [ROADMAP](docs/ROADMAP.md).
 
 **No override below the site** (checked on CVAD 2607 LTSR, all Citrix PowerShell snap-ins on the Delivery
 Controller): the `AzureSSOn*` values exist only on `Set-BrokerSite`. Delivery groups only carry `MachineLogOnType`
@@ -119,7 +119,7 @@ Not covered: Citrix DaaS / Citrix Cloud (own Citrix documentation), Entra joined
 |---|---|
 | `scripts/` | PowerShell: export of the current config, idempotent setup per component, validation |
 | `config/` | `example.json` with placeholders; real values go into `*.local.json` (git-ignored) |
-| `docs/` | [architecture](docs/architecture.md), troubleshooting signatures, client matrix, limitations, [ROADMAP](docs/ROADMAP.md) (v1.1: several stores per site via NetScaler rewrite), [release steps](docs/release.md) |
+| `docs/` | [architecture](docs/architecture.md), troubleshooting signatures, client matrix, limitations, [ROADMAP](docs/ROADMAP.md) (v1.1: end-to-end deployment with netscaler-nitro and netscaler-vpx-deploy), [release steps](docs/release.md) |
 
 ## Conventions
 Placeholders only (`example.org`, `192.0.2.x`, `<tenant-id>`). No secrets in files or on command lines: client
