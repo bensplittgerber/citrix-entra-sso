@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.0.1 - 2026-10-24
+
+Documentation only, no script changes.
+
+### Added
+- `docs/img/architecture-overview.svg`: overview diagram with the 8 logon steps (HTTPS, ICA/HDX through the Gateway,
+  Entra token flow incl. the Web Extension -> Workspace app handoff), no vendor logos.
+- `docs/architecture.md`: detailed diagram and the 8 steps with where each one breaks.
+- Client experience screenshots (redacted): hybrid desktop, HTML5 session, smart card PIN for the HDX connection,
+  connection reset without client certificate.
+
+### Changed
+- README restructured: architecture and client experience first, the one-store-per-site limitation below.
+- README: validated scope note - HTML5 and hybrid browser-to-Workspace-app launches with mandatory NetScaler mTLS and
+  FAS-free Entra SSO; direct native Workspace app store enrollment through an mTLS-only Gateway is not supported.
+
 ## v1.0.0 - 2026-10-24
 
 First release. Entra SSO without FAS on-premises (CVAD 2607 LTSR): NetScaler Gateway (OIDC to Entra, optional
