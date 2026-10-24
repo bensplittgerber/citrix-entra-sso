@@ -35,7 +35,7 @@ messaging host, VDA prerequisites. RDP with Entra SSO to the same VDA worked (ho
 | Client | HTML5 | Hybrid (browser -> Workspace app) | Native Workspace app |
 |---|---|---|---|
 | Windows 11, Chrome | OK | OK (Web Extension + Workspace app 2607) | OK (store added in Workspace app; not via an mTLS Gateway) |
-| Windows 11, Edge | OK | **fails**: the browser gets the token in time, but it never reaches the VDA (CloudAP `0xC0048422`); same PC, Workspace app and store work with Chrome. Suspect: native messaging host of Workspace app registered only for Chrome (under investigation) | OK |
+| Windows 11, Edge | OK | OK **only with the Citrix Web Extension allowed on the store site** (site access "On all sites" or the store URL; with "On click" the launch ends on the Windows logon screen) | OK |
 | macOS, Chrome | OK | OK | OK |
 | macOS, Safari | OK | **not supported** (Citrix: hybrid only Edge/Chrome + Web Extension) | - |
 | iPadOS, embedded web view | not supported (WebKit; also no FIDO2) | - | not tested |
@@ -84,3 +84,16 @@ successfully from MSAL` - but the HDX connection fails: HTML5 log `WebSocket con
 Edge net-export `WEBSOCKET_UPGRADE_FAILURE` / `ERR_INVALID_RESPONSE` towards the Gateway. This is the proxy, not Entra
 SSO. Fix on the proxy side: exclude the Gateway FQDN from SSL inspection (and allow WebSockets). A Gateway that
 requires a client certificate (mTLS) cannot work through SSL inspection at all.
+
+## Hybrid launch in Edge: Citrix Web Extension site access
+Symptom (Windows 11, Edge, hybrid launch = browser -> Workspace app): the browser gets the Entra token in time (Edge
+net-export: silent `authorize` + `token` 200 before Workspace app connects), but the VDA never receives it - Entra mode
+after 30 s, CloudAP `0xC0048422`, Windows logon screen. The same PC, Workspace app and store work in Chrome, and HTML5
+and native launches work in Edge.
+Cause: the Citrix Web Extension in Edge had **Site access = "On click"**, so it does not run on the store page and the
+token handoff to Workspace app does not happen. Fix: `edge://extensions` -> Citrix Web Extension -> Site access
+**"On specific sites"** (store / Gateway URL) or **"On all sites"**; for managed devices set it centrally with the
+Edge policy `ExtensionSettings` for the extension id `pmdpflpcmcomdkocbehamllbfkdgnalf` (Edge Add-ons; Chrome id
+`dbdlmgpfijccjgnnpacnamgdfmljoeee`), e.g. `runtime_allowed_hosts` with the Gateway URL. Verified 2026-10-24: after the
+change Entra mode at connect, Windows logon after 2 s. (The Workspace app native messaging host being registered only
+under the Chrome registry keys was a red herring - not needed for Edge.)
