@@ -15,6 +15,17 @@ Status: work in progress. Verified end to end in a lab; the PowerShell automatio
 > with the site pointed at a second Gateway, the first store's pop-up was sent to the second Gateway's store.
 > A "multi tenant Entra ID store" mode exists in the HTML5 client (log message on mismatch) but was not found to work
 > on-premises. Details: [Limitation: one Entra SSO store origin per site](#limitation-one-entra-sso-store-origin-per-site).
+>
+> **No override below the site** (checked on CVAD 2607 LTSR, all Citrix PowerShell snap-ins on the Delivery
+> Controller): the `AzureSSOn*` values exist only on `Set-BrokerSite`. Delivery groups only carry `MachineLogOnType`
+> (AD / HybridAzureAd / AzureAd), entitlement/access rules, catalogs and applications have no Entra SSO settings, and
+> the `AzureAD*` parameters of identity pools are for joining machines, not for user SSO. StoreFront keeps a tenant id
+> per store (`Set-STFEntraIdSettings`), but the Client application and redirect URL the client receives in the ICA
+> file come from the site.
+
+![Site-wide redirect URL: the pop-up of the first store goes to the second Gateway's store](docs/img/site-wide-redirect-limitation.png)
+
+*Lab, redacted: the site points at a second Gateway; a user of the first store gets the second store's pop-up.*
 
 ## What this repo adds to the Citrix documentation
 - **`AzureSSOnRedirectUrl` (Broker site, site-wide) must be the Store Web URL exactly as the browser sees it,
@@ -35,12 +46,11 @@ the store origin and hence detecting as Multi tenant Entra ID store" and SSO fai
 Workspace app. Switching the site to another store means re-running the Broker settings (and the redirect URI on the
 Client application).
 
-Example (lab, redacted): the site was pointed at a second Gateway (`dev-gateway.example.org:8461`, store `StoreDevWeb`).
+Example (screenshot at the top, lab, redacted): the site was pointed at a second Gateway (`dev-gateway.example.org:8461`, store `StoreDevWeb`).
 A user on the first store (`gateway.example.org/Citrix/StoreWeb/`) launches a desktop; the browser pop-up is sent to the
 **second** store with the second Client application - here unreachable from an external client whose proxy only allows
 port 443 - and the session ends on the Windows logon screen.
 
-![Site-wide redirect URL: the pop-up of the first store goes to the second Gateway's store](docs/img/site-wide-redirect-limitation.png)
 
 Check and switch the site on a Delivery Controller (Windows PowerShell, Citrix Broker snap-in):
 
