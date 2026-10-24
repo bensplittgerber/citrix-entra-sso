@@ -3,7 +3,8 @@
 Single sign-on with Microsoft Entra ID to Citrix Virtual Apps and Desktops **without FAS**, on-premises:
 NetScaler Gateway (OIDC) -> StoreFront -> Entra hybrid joined VDAs (CVAD 2607 LTSR).
 
-Status: work in progress. Verified end to end in a lab; the PowerShell automation is being built.
+Status: v1.0 - verified end to end in a lab (HTML5 and hybrid, also through an mTLS Gateway). See
+[CHANGELOG](CHANGELOG.md); the Conditional Access script has not been run against a tenant yet.
 
 > [!IMPORTANT]
 > **One Gateway / store per Citrix site.** The Entra SSO settings (`AzureSSOn*`: Client application, authorize URL

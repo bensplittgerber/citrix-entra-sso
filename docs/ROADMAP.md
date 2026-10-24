@@ -1,10 +1,16 @@
 # Roadmap
 
-## v1.0 (in progress)
+## v1.0 (released 2026-10-24)
 - Entra SSO without FAS on-premises: NetScaler Gateway (OIDC, optional mTLS) -> StoreFront -> hybrid joined VDAs.
 - Scripts: export/check, StoreFront store setup, Entra Client application, dedicated Conditional Access policy
   (phishing-resistant MFA).
-- Documented limitation: one Entra SSO store origin (Gateway URL + store + tenant) per Citrix site.
+- Documented limitations: one Entra SSO store origin (Gateway URL + store + tenant) per Citrix site; hybrid launches
+  need the store on port 443.
+
+## Open for v1.0.x
+- Run `New-EntraSsoConditionalAccess.ps1` against a test group (report-only, then `-Enforce`) and document the result.
+- NetScaler part as a script (NITRO): OIDC action, nFactor with optional mTLS check, token rewrite, session policy.
+- mTLS Gateway: compare the certificate UPN with the Entra `upn` (certificate and Entra user are decoupled).
 
 ## v1.1 (planned): more than one Entra SSO store per site - NetScaler response rewrite (unsupported workaround)
 Idea: the site-wide `AzureSSOn*` values travel Broker -> StoreFront (direct) and then StoreFront -> client **inside
