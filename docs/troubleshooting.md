@@ -34,7 +34,8 @@ messaging host, VDA prerequisites. RDP with Entra SSO to the same VDA worked (ho
 ## Client matrix (lab, 2026-10)
 | Client | HTML5 | Hybrid (browser -> Workspace app) | Native Workspace app |
 |---|---|---|---|
-| Windows 11, Edge / Chrome | OK | **fails** (no token reaches the VDA, CloudAP `0xC0048422`; with and without mTLS, Workspace app 2607 + Web Extension 26.1.6; under investigation) | OK (store added in Workspace app; not via an mTLS Gateway) |
+| Windows 11, Chrome | OK | OK (Web Extension + Workspace app 2607) | OK (store added in Workspace app; not via an mTLS Gateway) |
+| Windows 11, Edge | OK | **fails**: the browser gets the token in time, but it never reaches the VDA (CloudAP `0xC0048422`); same PC, Workspace app and store work with Chrome. Suspect: native messaging host of Workspace app registered only for Chrome (under investigation) | OK |
 | macOS, Chrome | OK | OK | OK |
 | macOS, Safari | OK | **not supported** (Citrix: hybrid only Edge/Chrome + Web Extension) | - |
 | iPadOS, embedded web view | not supported (WebKit; also no FIDO2) | - | not tested |
