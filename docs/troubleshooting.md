@@ -95,5 +95,8 @@ token handoff to Workspace app does not happen. Fix: `edge://extensions` -> Citr
 **"On specific sites"** (store / Gateway URL) or **"On all sites"**; for managed devices set it centrally with the
 Edge policy `ExtensionSettings` for the extension id `pmdpflpcmcomdkocbehamllbfkdgnalf` (Edge Add-ons; Chrome id
 `dbdlmgpfijccjgnnpacnamgdfmljoeee`), e.g. `runtime_allowed_hosts` with the Gateway URL. Verified 2026-10-24: after the
-change Entra mode at connect, Windows logon after 2 s. (The Workspace app native messaging host being registered only
+change Entra mode at connect, Windows logon after 2 s.
+
+![Citrix Web Extension in Edge with site access 'On click' - change to 'On specific sites' or 'On all sites'](img/edge-extension-site-access-on-click.png)
+ (The Workspace app native messaging host being registered only
 under the Chrome registry keys was a red herring - not needed for Edge.)
