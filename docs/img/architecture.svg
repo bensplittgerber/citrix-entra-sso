@@ -139,10 +139,13 @@
   <!-- workspace app -> gateway -> vda HDX -->
   <path class="ln" d="M254,440 L316,440"/>
   <path class="ln" d="M534,560 Q570,560 570,640 L1040,640 L1040,530"/>
-  <circle class="n" cx="285" cy="426" r="10"/><text class="nt" x="285" y="431">6</text>
+  <circle class="n" cx="285" cy="426" r="10"/><text class="nt" x="285" y="431">7</text>
+  <!-- browser -> workspace app (token handoff) -->
+  <path class="le" d="M200,370 L200,388"/>
+  <circle class="ne" cx="220" cy="380" r="10"/><text class="nt" x="220" y="385">6</text>
   <!-- vda -> entra -->
   <path class="le" d="M1046,300 L1046,156"/>
-  <circle class="ne" cx="1061" cy="230" r="10"/><text class="nt" x="1061" y="235">7</text>
+  <circle class="ne" cx="1061" cy="230" r="10"/><text class="nt" x="1061" y="235">8</text>
   <!-- controller -> vda -->
   <path class="ln" d="M850,520 L930,480"/>
 
@@ -154,7 +157,8 @@
     <text class="lbl" x="0" y="60">4  launch: ICA file with the site-wide AzureSSOn* values</text>
     <text class="lble" x="600" y="0">5  browser (store page or Web Extension) gets a token for</text>
     <text class="lble" x="618" y="16">Citrix-Workspace-Resource, scope .../id/&lt;VDA device id&gt;</text>
-    <text class="lble" x="600" y="40">6  HDX through the Gateway; the token goes to the VDA</text>
-    <text class="lble" x="600" y="60">7  VDA (CloudAP) redeems the token with Entra, user signed in</text>
+    <text class="lble" x="600" y="34">6  hybrid: the Web Extension hands the token to Workspace app</text>
+    <text class="lbl" x="600" y="50">7  HDX through the Gateway; the token goes to the VDA</text>
+    <text class="lble" x="600" y="66">8  VDA (CloudAP) redeems the token with Entra, user signed in</text>
   </g>
 </svg>

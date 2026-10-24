@@ -7,7 +7,9 @@ Status: v1.0 - verified end to end in a lab (HTML5 and hybrid, also through an m
 [CHANGELOG](CHANGELOG.md); the Conditional Access script has not been run against a tenant yet.
 
 ## Architecture
-![Architecture: client, NetScaler Gateway, StoreFront, Delivery Controller, VDA and Entra ID with the logon flow](docs/img/architecture.svg)
+![Architecture overview: client, NetScaler Gateway, StoreFront, Delivery Controller, VDA and Entra ID with the 8 logon steps](docs/img/architecture-overview.svg)
+
+Settings per component and where each step can break: [docs/architecture.md](docs/architecture.md).
 
 The user signs in **once** with Entra (passkey, Windows Hello or an existing Entra session; optionally behind a
 client certificate on the Gateway). At launch the browser - the store page for HTML5, the Citrix Web Extension for
@@ -112,9 +114,9 @@ Not covered: Citrix DaaS / Citrix Cloud (own Citrix documentation), Entra joined
 |---|---|
 | `scripts/` | PowerShell: export of the current config, idempotent setup per component, validation |
 | `config/` | `example.json` with placeholders; real values go into `*.local.json` (git-ignored) |
-| `docs/` | troubleshooting signatures, client matrix, limitations, [ROADMAP](docs/ROADMAP.md) (v1.1: several stores per site via NetScaler rewrite), [release steps](docs/release.md) |
+| `docs/` | [architecture](docs/architecture.md), troubleshooting signatures, client matrix, limitations, [ROADMAP](docs/ROADMAP.md) (v1.1: several stores per site via NetScaler rewrite), [release steps](docs/release.md) |
 
 ## Conventions
 Placeholders only (`example.org`, `192.0.2.x`, `<tenant-id>`). No secrets in files or on command lines: client
 secrets via masked prompts or `${env:NAME}`. The public Citrix multi-tenant app id `3a510bb1-e334-4298-831e-3eac97f8b26c`
-(Citrix-Workspace-Resource) is not a secret. The architecture diagram is an own drawing (no Citrix artwork).
+(Citrix-Workspace-Resource) is not a secret. The architecture diagrams are own drawings (no vendor artwork or logos).
