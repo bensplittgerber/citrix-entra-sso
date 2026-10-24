@@ -35,6 +35,26 @@ the store origin and hence detecting as Multi tenant Entra ID store" and SSO fai
 Workspace app. Switching the site to another store means re-running the Broker settings (and the redirect URI on the
 Client application).
 
+Example (lab, redacted): the site was pointed at a second Gateway (`dev-gateway.example.org:8461`, store `StoreDevWeb`).
+A user on the first store (`gateway.example.org/Citrix/StoreWeb/`) launches a desktop; the browser pop-up is sent to the
+**second** store with the second Client application - here unreachable from an external client whose proxy only allows
+port 443 - and the session ends on the Windows logon screen.
+
+![Site-wide redirect URL: the pop-up of the first store goes to the second Gateway's store](docs/img/site-wide-redirect-limitation.png)
+
+Check and switch the site on a Delivery Controller (Windows PowerShell, Citrix Broker snap-in):
+
+```powershell
+Add-PSSnapin Citrix.Broker.Admin.V2
+# current values (keep them as the way back)
+Get-BrokerSite | Select-Object AzureSSOnClientId, AzureSSOnRedirectUrl, AzureSSOnAuthorizeUrl, AzureSSOnResourceAppId
+```
+```powershell
+# point the site at the Gateway + store that should get Entra SSO (trailing slash!)
+Set-BrokerSite -AzureSSOnClientId '<client-app-id>' -AzureSSOnRedirectUrl 'https://gateway.example.org/Citrix/StoreWeb/'
+```
+The Client application must have that exact URL as SPA redirect URI. `scripts/Export-EntraSsoConfig.ps1` checks both.
+
 ## Scope
 | Component | Version tested |
 |---|---|
