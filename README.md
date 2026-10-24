@@ -81,7 +81,7 @@ Not covered: Citrix DaaS / Citrix Cloud (own Citrix documentation), Entra joined
 |---|---|
 | `scripts/` | PowerShell: export of the current config, idempotent setup per component, validation |
 | `config/` | `example.json` with placeholders; real values go into `*.local.json` (git-ignored) |
-| `docs/` | troubleshooting signatures, client matrix, limitations |
+| `docs/` | troubleshooting signatures, client matrix, limitations, [ROADMAP](docs/ROADMAP.md) (v1.1: several stores per site via NetScaler rewrite) |
 
 ## Conventions
 Placeholders only (`example.org`, `192.0.2.x`, `<tenant-id>`). No secrets in files or on command lines: client
