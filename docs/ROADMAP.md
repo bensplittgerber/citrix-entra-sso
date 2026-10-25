@@ -13,10 +13,10 @@
   (re-authentication prompt at launch after the sign-in frequency).
 - mTLS Gateway: compare the certificate UPN with the Entra `upn` (certificate and Entra user are decoupled).
 
-## v1.1 (in progress): end-to-end deployment with the companion repositories
-Status: files written ([deployment.md](deployment.md), `netscaler/`, `Set-BrokerSiteEntraSso.ps1`); validation on a
-fresh VPX open. Generic netscaler-nitro gaps: none blocking for v1.2.0 (all resources are generic NITRO resources;
-the two `PUT` steps of the mTLS file are reverted by hand).
+## v1.1 (released 2026-10-25): end-to-end deployment with the companion repositories
+Status: [deployment.md](deployment.md), `netscaler/`, `Set-BrokerSiteEntraSso.ps1`; validated in the lab without the
+optional mTLS files (see the note in deployment.md). netscaler-nitro gaps: none blocking with v1.2.0 (all resources are
+generic NITRO resources; the two `PUT` steps of the mTLS file are reverted by hand).
 
 Goal: the whole setup from an empty hypervisor to a working Entra SSO launch, scripted, with dry runs and rollback.
 This repository adds the Entra SSO specific parts; generic NetScaler tooling stays in its own repositories.

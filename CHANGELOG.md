@@ -33,7 +33,11 @@ enrollment onto YubiKey PIV (5 NFC fw 5.1.2, 5C Nano fw 5.7.4), CRL check on the
 
 Not included: OCSP (step-ca has no responder), self-service enrollment, enrollment on macOS.
 
-## Unreleased (v1.1.0)
+## v1.1.0 - 2026-10-25
+
+> Note: this tag already contains the client certificate authority files of the next version (`docs/client-ca.md`,
+> `pki/`, `scripts/Enroll-YubiKeyPiv.ps1`, `netscaler/13-client-crl.cli`, Conditional Access `includeAllUsers`). They
+> are listed under "Unreleased (v1.2.0)" and are released separately as v1.2.0.
 
 End-to-end deployment with the companion repositories (ROADMAP v1.1). Validated in the lab without the optional
 mTLS files: VPX from netscaler-vpx-deploy v1.0.0, netscaler-nitro v1.2.0, NetScaler 14.1 build 73.46, CVAD 2607 LTSR,
