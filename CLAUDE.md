@@ -9,7 +9,8 @@ StoreFront → Entra-hybrid-joined VDAs (CVAD 2607 LTSR). Das Repo ist kein Prog
 PowerShell-Skripten, NetScaler-Objektdateien, PKI-Vorlagen und Doku. Es gibt keinen Build, keinen Linter und keine
 Tests; geprüft wird mit `-WhatIf` und im Lab gegen echte Systeme.
 
-Öffentliches Repo: alle Inhalte (Skripte, Kommentare, Doku, Commits, CHANGELOG) sind **auf Englisch**.
+Öffentliches Repo: alle Inhalte (Skripte, Kommentare, Doku, Commits, CHANGELOG) sind **auf Englisch**. Ausnahme ist
+diese `CLAUDE.md`, sie bleibt auf Deutsch (entschieden 2026-10-25).
 
 ## Wie die Teile zusammenhängen
 
@@ -21,7 +22,7 @@ ausgeschlossen). Jedes Skript in `scripts/` nimmt sie über `-ConfigFile` und li
 Reihenfolge laut `docs/deployment.md` (Schritte 1–7, mit Rückweg):
 1. Entra: `New-EntraSsoClientApp.ps1` (`-NewSecret` legt das Secret nur in `$env:OIDC_ENTRASSO_CLIENT_SECRET` der
    laufenden Sitzung ab), `New-EntraSsoConditionalAccess.ps1` (report-only bis `-Enforce`)
-2. NetScaler: `netscaler/10-*.json`, `11-*.json` (optional `12-*` mTLS, `13-client-crl.cli` per NetScaler-CLI) werden
+2. NetScaler: `netscaler/09-*.json` (Gateway-Zertifikat, entfällt bei ACME), `10-*.json`, `11-*.json` (optional `12-*` mTLS, `13-client-crl.cli` per NetScaler-CLI) werden
    **nicht hier** ausgeführt, sondern vom Nachbar-Repo `../netscaler-nitro` (`Invoke-NsDeployment.ps1`,
    `Deploy-NsObjects.ps1`, `Deploy-NsCertificates.ps1`; ≥ v1.2.0). Format: `{ "nsip", "steps": [ {comment/note} |
    {resource, data} ] }` mit generischen NITRO-Ressourcen. Echte Werte in `netscaler/*.local.json` (ignoriert).
