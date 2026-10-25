@@ -49,7 +49,7 @@ Validation: a fresh VPX built only from these steps; HTML5 and hybrid launches w
 NetScaler part through the netscaler-nitro journal. The release ships with a compatibility table of the repository
 versions it was tested with.
 
-## v1.2 (unreleased): client certificate authority for mTLS
+## v1.2 (released 2026-10-25): client certificate authority for mTLS
 - Done: [docs/client-ca.md](client-ca.md) - step-ca client CA, enrollment onto YubiKey PIV
   (`scripts/Enroll-YubiKeyPiv.ps1`), CRL on the Gateway (`netscaler/13-client-crl.cli`) with a public CRL
   distribution point, revocation, renewal by re-enrollment.

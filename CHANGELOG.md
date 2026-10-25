@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased (v1.2.0)
+## v1.2.0 - 2026-10-25
 
 Client certificate authority for the optional mTLS Gateway (ROADMAP v1.2). Lab-verified: step-ca client CA,
 enrollment onto YubiKey PIV (5 NFC fw 5.1.2, 5C Nano fw 5.7.4), CRL check on the Gateway, revocation, public CRL.
+These files were already on `main` when v1.1.0 was tagged; v1.2.0 is their first release as a documented feature.
 
 ### Added
 - `docs/client-ca.md`: dedicated step-ca client CA (clientAuth only, own root, key offline, name policy, renewal
@@ -27,9 +28,13 @@ enrollment onto YubiKey PIV (5 NFC fw 5.1.2, 5C Nano fw 5.7.4), CRL check on the
   the launch pop-up asks to sign in again ("Your organizational policy requires you to sign in again after a certain
   time period"). Entra offers the account's default method first (password, which alone does not satisfy the
   strength) and then Windows Hello; "Sign in another way" goes straight to a phishing-resistant method. A second
-  launch within the hour needed no prompt. Also verified on macOS with the enforced policy: smart card (YubiKey PIV)
+  launch within the hour needed no prompt. The re-authentication happens inside the launch, so the first launch after
+  the period can fail and the next one works - see [troubleshooting](docs/troubleshooting.md#conditional-access-sign-in-frequency-the-first-launch-after-the-period-can-fail).
+  Also verified on macOS with the enforced policy: smart card (YubiKey PIV)
   for the mTLS Gateway, FIDO2 security key for the Entra sign-in.
 - README: the note that the Conditional Access script was never run against a tenant is removed.
+- README, `docs/deployment.md`: netscaler-nitro v1.2.0 stays the validated minimum, v1.2.1 or later is recommended
+  (its fix, the `sslprofile_sslcipher_binding` lookup, is not used by the Entra SSO files).
 
 Not included: OCSP (step-ca has no responder), self-service enrollment, enrollment on macOS.
 

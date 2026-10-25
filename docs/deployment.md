@@ -18,7 +18,7 @@ src/
 | Component | Minimum | Notes |
 |---|---|---|
 | citrix-entra-sso | v1.1.0 | `netscaler/` object files, `Set-BrokerSiteEntraSso.ps1` |
-| [netscaler-nitro](https://github.com/bensplittgerber/netscaler-nitro) | v1.2.0 | look-up before add, journal and undo; all resources used here are generic NITRO resources |
+| [netscaler-nitro](https://github.com/bensplittgerber/netscaler-nitro) | v1.2.0 (validated); v1.2.1 or later recommended | look-up before add, journal and undo; all resources used here are generic NITRO resources |
 | [netscaler-vpx-deploy](https://github.com/bensplittgerber/netscaler-vpx-deploy) | v1.0.0 | only for a new VPX on standalone ESXi |
 | NetScaler | 14.1 (tested build 73.46) | nFactor, OAuth action with PKCE |
 | CVAD (Delivery Controller, StoreFront, VDA) | 2607 LTSR | see [README](../README.md#scope) |

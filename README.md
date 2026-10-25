@@ -3,8 +3,8 @@
 Single sign-on with Microsoft Entra ID to Citrix Virtual Apps and Desktops **without FAS**, on-premises:
 NetScaler Gateway (OIDC) -> StoreFront -> Entra hybrid joined VDAs (CVAD 2607 LTSR).
 
-Status: v1.0 - verified end to end in a lab (HTML5 and hybrid, also through an mTLS Gateway). See
-[CHANGELOG](CHANGELOG.md).
+Status: v1.2 - verified end to end in a lab (HTML5 and hybrid, also through an mTLS Gateway with YubiKey PIV
+certificates from the [client CA](docs/client-ca.md)). See [CHANGELOG](CHANGELOG.md).
 
 ## Architecture
 ![Architecture overview: client, NetScaler Gateway, StoreFront, Delivery Controller, VDA and Entra ID with the 8 logon steps](docs/img/architecture-overview.svg)
@@ -118,7 +118,7 @@ Not covered: Citrix DaaS / Citrix Cloud (own Citrix documentation), Entra joined
 | Path | Content |
 |---|---|
 | `scripts/` | PowerShell: export of the current config, idempotent setup per component, validation |
-| `netscaler/` | JSON object files for [netscaler-nitro](https://github.com/bensplittgerber/netscaler-nitro) (>= v1.2.0): Entra OIDC nFactor, Gateway on 443 with token rewrite, optional mTLS |
+| `netscaler/` | JSON object files for [netscaler-nitro](https://github.com/bensplittgerber/netscaler-nitro) (>= v1.2.0, v1.2.1 recommended): Entra OIDC nFactor, Gateway on 443 with token rewrite, optional mTLS |
 | `pki/` | optional mTLS: step-ca client CA templates (CA config, leaf template, compose, nginx CRL) - see [client CA](docs/client-ca.md) |
 | `config/` | `example.json` with placeholders; real values go into `*.local.json` (git-ignored) |
 | `docs/` | [end-to-end deployment](docs/deployment.md), [architecture](docs/architecture.md), troubleshooting signatures, client matrix, limitations, [ROADMAP](docs/ROADMAP.md) (v1.1: end-to-end deployment with netscaler-nitro and netscaler-vpx-deploy), [release steps](docs/release.md) |
