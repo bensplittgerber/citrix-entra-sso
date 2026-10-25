@@ -123,7 +123,9 @@ $result = Invoke-Command -ComputerName $cfg.storeFrontServer -ArgumentList $desi
         $gw = Get-STFRoamingGateway -Name $d.GatewayName -ErrorAction SilentlyContinue
         $want = '{0}|{1}|Domain|{2}|{3}|True|{4}' -f $d.GatewayUrl, $d.CallbackUrl, $d.GatewayVersion, $d.GatewaySnip, ($d.StaUrls -join ',')
         $cur = if ($gw) { '{0}|{1}|{2}|{3}|{4}|{5}|{6}' -f $gw.Location, $gw.CallbackUrl, $gw.Logon, $gw.Version, $gw.IpAddress, $gw.SessionReliability, (($gw.SecureTicketAuthorityUrls | ForEach-Object { "$($_.StaUrl)" }) -join ',') } else { '' }
-        $gwArgs = @{ LogonType = 'Domain'; Version = $d.GatewayVersion; GatewayUrl = $d.GatewayUrl; CallbackUrl = $d.CallbackUrl; SubnetIPAddress = $d.GatewaySnip; SecureTicketAuthorityUrls = $d.StaUrls }
+        $gwArgs = @{ LogonType = 'Domain'; Version = $d.GatewayVersion; GatewayUrl = $d.GatewayUrl; CallbackUrl = $d.CallbackUrl; SecureTicketAuthorityUrls = $d.StaUrls }
+        # SNIP is optional (only needed to tell apart Gateways with the same URL); an empty value fails the cmdlet's IPv4 validation
+        if ($d.GatewaySnip) { $gwArgs.SubnetIPAddress = $d.GatewaySnip }
         if ($gw) { Step "Gateway $($d.GatewayName)" $cur $want { Set-STFRoamingGateway -Name $d.GatewayName @gwArgs -SessionReliability $true -Confirm:$false } }
         else { Step "Gateway $($d.GatewayName)" '' $want -Create { Add-STFRoamingGateway -Name $d.GatewayName @gwArgs -SessionReliability -Confirm:$false } }
 

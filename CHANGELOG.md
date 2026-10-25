@@ -61,6 +61,11 @@ End-to-end deployment with the companion repositories (ROADMAP v1.1). Not yet va
 - `11-entra-sso-gateway.json`: note that NetScaler 14.1 binds the built-in cache policies itself on a new Gateway
   vserver (the six bindings report `[EXISTS]`), seen in the validation on a lab VPX.
 
+### Fixed
+- `Set-StoreFrontEntraSso.ps1`: a new Gateway with an empty `storeFront.gatewaySnip` failed with "Invalid IPV4
+  Subnet Address" (`Add-STFRoamingGateway -SubnetIPAddress ''`). The SNIP is now passed only when set (found in the
+  v1.1 validation).
+
 ## v1.0.1 - 2026-10-24
 
 Documentation only, no script changes.
