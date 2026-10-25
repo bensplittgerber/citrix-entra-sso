@@ -106,105 +106,114 @@ Belegte Fakten, auf die der Plan baut (geprüft 2026-10-25):
 
 ### Aufgabe 1: Vollständige nginx-Konfiguration und Snippet-Kommentar
 
-- [ ] neue Datei `pki/step-ca-client/nginx-client-crl-server.conf`: ein `server`-Block mit
+- [x] neue Datei `pki/step-ca-client/nginx-client-crl-server.conf`: ein `server`-Block mit
       `listen 80 default_server;`, `server_name _;`, `server_tokens off;` und
       `include /etc/nginx/snippets/client-crl.conf;`. Kopfkommentar: wird in `compose.example.yml` als
       `/etc/nginx/conf.d/default.conf` eingebunden und ersetzt damit den Standard-Server des Images
-- [ ] `pki/step-ca-client/nginx-client-crl.conf`: nur Zeile 1 neu formulieren. Inhalt: dieser Block wird von
+- [x] `pki/step-ca-client/nginx-client-crl.conf`: nur Zeile 1 neu formulieren. Inhalt: dieser Block wird von
       `nginx-client-crl-server.conf` eingebunden (eigenständiges Projekt) oder in den Port-80-`server`-Block des eigenen
       Webservers übernommen (Variante); nginx muss im selben Docker-Netz wie `step-ca-client` laufen. Die Zeilen 2–11
       (Resolver, `location`-Blöcke) bleiben unverändert
-- [ ] prüfen: beide Dateien enthalten kein „existing“ mehr in der Bedeutung „vorhandenes Projekt / vorhandener Block“
-- [ ] prüfen (mit Docker-Daemon): `docker run --rm` mit `nginx-client-crl-server.conf` → `/etc/nginx/conf.d/default.conf:ro`
+- [x] prüfen: beide Dateien enthalten kein „existing“ mehr in der Bedeutung „vorhandenes Projekt / vorhandener Block“
+- [x] prüfen (mit Docker-Daemon): `docker run --rm` mit `nginx-client-crl-server.conf` → `/etc/nginx/conf.d/default.conf:ro`
       und `nginx-client-crl.conf` → `/etc/nginx/snippets/client-crl.conf:ro`, Befehl `nginx -t` → „syntax is ok“,
       „test is successful“
 
 ### Aufgabe 2: Eigenständiges Compose-Projekt `compose.example.yml`
 
-- [ ] neue Datei `pki/step-ca-client/compose.example.yml`, Kopfkommentar wie im Override: keine
+- [x] neue Datei `pki/step-ca-client/compose.example.yml`, Kopfkommentar wie im Override: keine
       `DOCKER_STEPCA_INIT_*`-Variablen (Auto-Init schreibt das Provisioner-Passwort in `docker logs`); Hinweis, dass die
       Datei im Projektordner als `compose.yml` abgelegt wird
-- [ ] oberste Ebene `name: pki-client` (Projektname unabhängig vom Ordner), kein `version`
-- [ ] Dienst `step-ca-client` unverändert aus `compose.override.example.yml` übernehmen (Image
+- [x] oberste Ebene `name: pki-client` (Projektname unabhängig vom Ordner), kein `version`
+- [x] Dienst `step-ca-client` unverändert aus `compose.override.example.yml` übernehmen (Image
       `smallstep/step-ca:0.30.2`, `container_name: step-ca-client`, `restart: unless-stopped`,
       `./step-client:/home/step`, Port `192.0.2.186:9444:9000` mit dem Kommentar „enrollment workstations only: LAN IP,
       no internet port forward“), zusätzlich `networks: [pki-client]`
-- [ ] Dienst `nginx`: Image `nginx:1.30.x-alpine` (aktueller Tag, Stand Plan `1.30.6`), `restart: unless-stopped`,
+- [x] Dienst `nginx`: Image `nginx:1.30.x-alpine` (aktueller Tag, Stand Plan `1.30.6`), `restart: unless-stopped`,
       Port `"80:80"` (Ziel des Port-Forwards für die öffentliche CRL), Bind-Mounts
       `./nginx-client-crl-server.conf:/etc/nginx/conf.d/default.conf:ro` und
       `./nginx-client-crl.conf:/etc/nginx/snippets/client-crl.conf:ro`, `networks: [pki-client]`
-- [ ] bewusst **kein** `depends_on` vom nginx auf die CA; Kommentar am Dienst: nginx soll auch ohne laufende CA starten
+- [x] bewusst **kein** `depends_on` vom nginx auf die CA; Kommentar am Dienst: nginx soll auch ohne laufende CA starten
       (Variable + Resolver im Snippet), `/client/crl` antwortet dann 502
-- [ ] Netz `pki-client` auf oberster Ebene (Bridge, Standardtreiber)
-- [ ] prüfen: `docker compose -f pki/step-ca-client/compose.example.yml config -q` → Exit 0, keine Warnung
-- [ ] prüfen (mit Docker-Daemon): Rauchtest aus der Prüfstrategie (nur `nginx`, Projekt außerhalb des Repos):
+- [x] Netz `pki-client` auf oberster Ebene (Bridge, Standardtreiber)
+- [x] prüfen: `docker compose -f pki/step-ca-client/compose.example.yml config -q` → Exit 0, keine Warnung
+- [x] prüfen (mit Docker-Daemon): Rauchtest aus der Prüfstrategie (nur `nginx`, Projekt außerhalb des Repos):
       `/` → 404, `POST /client/crl` → 403, `GET /client/crl` → 502; danach `docker compose down`
+      (Ergebnis 2026-10-25, Engine 28.5.1, Compose v2.40.3: wie erwartet, zusätzlich `HEAD /client/crl` → 502 und
+      Server-Kopf `nginx` ohne Version)
 
 ### Aufgabe 3: Override als Variante kennzeichnen
 
-- [ ] `pki/step-ca-client/compose.override.example.yml`, Zeile 1–2: neu formulieren als Variante. Inhalt: für ein
+- [x] `pki/step-ca-client/compose.override.example.yml`, Zeile 1–2: neu formulieren als Variante. Inhalt: für ein
       eigenes Compose-Projekt, das bereits nginx auf Port 80 betreibt; neben dessen `compose.yml` legen; nginx und
       `step-ca-client` müssen im selben Netz liegen; im Port-80-`server`-Block `nginx-client-crl.conf` einbinden;
       ohne solches Projekt `compose.example.yml` nehmen. Hinweis zu `DOCKER_STEPCA_INIT_*` bleibt
-- [ ] Dienstdefinition bleibt unverändert
-- [ ] prüfen: `docker compose -f pki/step-ca-client/compose.override.example.yml config -q` → Exit 0
+- [x] Dienstdefinition bleibt unverändert
+- [x] prüfen: `docker compose -f pki/step-ca-client/compose.override.example.yml config -q` → Exit 0
 
 ### Aufgabe 4: `docs/client-ca.md` Abschnitt 1 (CA-Aufbau)
 
-- [ ] Zeile 34–38: Dateiliste um `compose.example.yml` und `nginx-client-crl-server.conf` ergänzen; ein Satz, dass
+- [x] Zeile 34–38: Dateiliste um `compose.example.yml` und `nginx-client-crl-server.conf` ergänzen; ein Satz, dass
       `compose.example.yml` CA und CRL-nginx als eigenes Projekt bringt und die Override-Datei nur die Variante ist
-- [ ] neuer kurzer Absatz „Docker host“ vor Schritt 1: Linux-Host mit Docker Engine und Compose v2 (`docker compose`),
+- [x] neuer kurzer Absatz „Docker host“ vor Schritt 1: Linux-Host mit Docker Engine und Compose v2 (`docker compose`),
       `jq` (Schritt 4), Port 80 frei (CRL), LAN-IP für Port 9444 (Enrollment), Projektordner `/srv/pki`
-- [ ] neuer Schritt 0 bzw. Erweiterung von Schritt 1: `/srv/pki` anlegen, die Dateien aus `pki/step-ca-client/`
+- [x] neuer Schritt 0 bzw. Erweiterung von Schritt 1: `/srv/pki` anlegen, die Dateien aus `pki/step-ca-client/`
       hineinkopieren, `compose.example.yml` als `compose.yml` speichern, LAN-IP im Port `9444` ersetzen. Die
       bisherigen Befehle (`install … ca.json.example …`) setzen voraus, dass die Dateien in `/srv/pki` liegen; das wird
       damit wahr
-- [ ] Schritt 7 (Zeile 93–98): Start beider Dienste (`docker compose up -d`, `docker compose ps`), Erwartung
+- [x] Schritt 7 (Zeile 93–98): Start beider Dienste (`docker compose up -d`, `docker compose ps`), Erwartung
       `step-ca-client` „healthy“ nach etwa einer Minute, nginx „running“; `docker exec step-ca-client step ca health`
       bleibt
-- [ ] Variante in einem kurzen Absatz am Ende von Abschnitt 1: eigenes Projekt mit nginx auf Port 80 → Override neben
+- [x] Variante in einem kurzen Absatz am Ende von Abschnitt 1: eigenes Projekt mit nginx auf Port 80 → Override neben
       die eigene `compose.yml`, gemeinsames Netz, Snippet in den eigenen Port-80-Block, Start mit
       `docker compose up -d step-ca-client`
-- [ ] prüfen: Schritte 1–8 lesen sich ab leerem Host ohne fremde Teile; kein Satz, der ein fremdes Compose-Projekt voraussetzt
+- [x] ➕ Variante: `ca.json.example` und `client-auth.tpl` müssen auch dort in den Projektordner (Schritt 1 setzt sie
+      voraus); `compose.override.yml` lädt Compose nur ohne `-f` automatisch (geprüft mit Compose v2.40.3), beides
+      steht jetzt im Absatz
+- [x] prüfen: Schritte 1–8 lesen sich ab leerem Host ohne fremde Teile; kein Satz, der ein fremdes Compose-Projekt voraussetzt
 
 ### Aufgabe 5: `docs/client-ca.md` Abschnitt 2 (CRL-Verteilpunkt) und README
 
-- [ ] Zeile 108–110: nginx kommt aus `compose.example.yml` (Dienst `nginx`, Konfiguration
+- [x] Zeile 108–110: nginx kommt aus `compose.example.yml` (Dienst `nginx`, Konfiguration
       `nginx-client-crl-server.conf` + `nginx-client-crl.conf`); Aussagen zu GET/HEAD und 404 bleiben; „The CA itself
       is never exposed“ bleibt
-- [ ] ein Satz „Alternative“: step-ca kann die CRL über `insecureAddress` selbst per HTTP ausliefern, aber nur unter
+- [x] ein Satz „Alternative“: step-ca kann die CRL über `insecureAddress` selbst per HTTP ausliefern, aber nur unter
       `/crl` bzw. `/1.0/crl`; das ändert den CDP und legt den CA-Prozess ins Internet, darum hier nginx
-- [ ] `README.md:122`: Beschreibung von `pki/` nachziehen, z. B. „step-ca client CA: standalone compose project (CA +
+- [x] `README.md:122`: Beschreibung von `pki/` nachziehen, z. B. „step-ca client CA: standalone compose project (CA +
       nginx for the public CRL), CA config, leaf template“
-- [ ] prüfen: Links in `docs/client-ca.md` auf die neuen Dateien zeigen auf existierende Pfade
+- [x] prüfen: Links in `docs/client-ca.md` auf die neuen Dateien zeigen auf existierende Pfade
 
 ### Aufgabe 6: CHANGELOG
 
-- [ ] Abschnitt für die nächste Patch-Version ergänzen (Doku/Beispieldateien, kein Bruch im Config-Layout →
+- [x] Abschnitt für die nächste Patch-Version ergänzen (Doku/Beispieldateien, kein Bruch im Config-Layout →
       Patch laut `docs/release.md`): „Added“ `compose.example.yml`, `nginx-client-crl-server.conf`; „Changed“
       Override und Snippet als Variante, `docs/client-ca.md` Aufbau ab leerem Docker-Host; getestete nginx-Version
       nennen. Datum und Versionsnummer setzt erst der Release, Format der vorhandenen Abschnitte beibehalten
-- [ ] prüfen: kein Tag, kein Release in dieser Umsetzung
+      (umgesetzt als `## Unreleased`; der Release benennt ihn in `## vX.Y.Z - YYYY-MM-DD` um, weil `docs/release.md`
+      die Notizen über diese Überschrift ausschneidet)
+- [x] prüfen: kein Tag, kein Release in dieser Umsetzung
 
 ### Aufgabe 7: Akzeptanzkriterien prüfen
 
-- [ ] Testbefehl aus dem Issue, im Worktree-Wurzelordner:
+- [x] Testbefehl aus dem Issue, im Worktree-Wurzelordner:
       `git grep -n -i -E "existing compose|existing .server" -- pki docs ':(exclude)docs/plans'; docker compose -f pki/step-ca-client/compose.example.yml config -q`
       → `git grep` ohne Treffer, `config -q` mit Exit 0 (Abweichung vom Issue: `docs/plans/` ist ausgenommen, weil dieser Plan den Testbefehl wörtlich enthält und sich sonst selbst findet)
-- [ ] Platzhalter-Check: `git grep -n -E "[a-z0-9-]+\.(de|com|net|local)\b|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+" -- pki docs/client-ca.md README.md`
+- [x] Platzhalter-Check: `git grep -n -E "[a-z0-9-]+\.(de|com|net|local)\b|[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+" -- pki docs/client-ca.md README.md`
       zeigt nur `example.org`/`example.com`, `192.0.2.x`, `127.0.0.11` und Versionsnummern
-- [ ] Zeilenenden: `git ls-files --eol pki docs/client-ca.md README.md CHANGELOG.md` → `i/lf` für alle geänderten
+- [x] Zeilenenden: `git ls-files --eol pki docs/client-ca.md README.md CHANGELOG.md` → `i/lf` für alle geänderten
       Dateien
-- [ ] keine Änderung an `ca.json.example`, `client-auth.tpl`, `scripts/Enroll-YubiKeyPiv.ps1`,
+- [x] keine Änderung an `ca.json.example`, `client-auth.tpl`, `scripts/Enroll-YubiKeyPiv.ps1`,
       `netscaler/13-client-crl.cli` (`git diff --stat origin/main`)
-- [ ] Syntaxprüfung der Skripte aus `CLAUDE.md` läuft weiter mit 0 Fehlern (nur zur Sicherheit, Skripte sind nicht
+- [x] Syntaxprüfung der Skripte aus `CLAUDE.md` läuft weiter mit 0 Fehlern (nur zur Sicherheit, Skripte sind nicht
       berührt)
 
 ### Aufgabe 8: Plan und Doku abschließen
 
-- [ ] diesen Plan mit dem tatsächlichen Stand abgleichen (abgehakte Punkte, ➕/⚠️)
-- [ ] `docs/troubleshooting.md` nur ergänzen, falls beim Rauchtest ein neues Fehlerbild auftaucht (z. B. nginx startet
-      nicht wegen doppeltem `default_server`)
+- [x] diesen Plan mit dem tatsächlichen Stand abgleichen (abgehakte Punkte, ➕/⚠️)
+- [x] `docs/troubleshooting.md` nur ergänzen, falls beim Rauchtest ein neues Fehlerbild auftaucht (z. B. nginx startet
+      nicht wegen doppeltem `default_server`) (kein neues Fehlerbild, keine Änderung)
+- [x] ➕ PR #12 (Branch `docs/4-client-ca-compose`), Review als PR-Kommentar, zwei Anmerkungen behoben (dbc8609),
+      eine begründet abgelehnt
 
 *ralphex verschiebt den fertigen Plan nach `docs/plans/completed/`.*
 
