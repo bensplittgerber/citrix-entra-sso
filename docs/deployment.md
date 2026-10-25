@@ -127,6 +127,11 @@ $cred  = Get-Credential nsroot
 
 `-Secret` only prompts (masked) if the variable is not set, so a secret from step 3 is reused as it is.
 
+![netscaler-nitro deploy of 11-entra-sso-gateway.json: every object [OK], the built-in cache policy bindings [EXISTS], config saved](img/nitro-deploy-gateway.webp)
+
+The six cache policy bindings report `[EXISTS]` on the brand-new vserver: NetScaler 14.1 binds the built-in cache
+policies itself when a Gateway vserver is added. They are not journaled and go away with the vserver.
+
 Optional mTLS:
 
 ```powershell

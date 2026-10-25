@@ -56,7 +56,8 @@
         "name": "gw_example_entrasso", "policy": "rw_pol_entrasso_token",
         "priority": 100, "gotopriorityexpression": "END", "bindpoint": "REQUEST" } },
 
-    { "comment": "Built-in cache policies" },
+    { "comment": "Built-in cache policies",
+      "note": "NetScaler 14.1 binds these itself on add vpn vserver: on a new vserver all six report [EXISTS] (found before add). Kept for older builds and for vservers created without them." },
     { "resource": "vpnvserver_cachepolicy_binding", "data": { "name": "gw_example_entrasso",
         "policy": "_cacheTCVPNStaticObjects", "priority": 10, "gotopriorityexpression": "END", "bindpoint": "REQUEST" } },
     { "resource": "vpnvserver_cachepolicy_binding", "data": { "name": "gw_example_entrasso",

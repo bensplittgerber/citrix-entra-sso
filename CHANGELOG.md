@@ -54,10 +54,12 @@ End-to-end deployment with the companion repositories (ROADMAP v1.1). Not yet va
   previous values as a `Set-BrokerSite` command, reports `AzureSSOnResourceAppId`.
 - `docs/deployment.md`: runbook from the VPX (netscaler-vpx-deploy) over base config and certificate
   (netscaler-nitro, ACME client), Entra, NetScaler, StoreFront and Broker to the export check; minimum versions;
-  way back per step.
+  way back per step. Screenshot of the Gateway deploy (`docs/img/nitro-deploy-gateway.webp`).
 
 ### Changed
 - `.gitignore`: `netscaler/*.local.json` and `certs/`.
+- `11-entra-sso-gateway.json`: note that NetScaler 14.1 binds the built-in cache policies itself on a new Gateway
+  vserver (the six bindings report `[EXISTS]`), seen in the validation on a lab VPX.
 
 ## v1.0.1 - 2026-10-24
 
