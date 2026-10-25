@@ -35,7 +35,10 @@ Not included: OCSP (step-ca has no responder), self-service enrollment, enrollme
 
 ## Unreleased (v1.1.0)
 
-End-to-end deployment with the companion repositories (ROADMAP v1.1). Not yet validated on a fresh VPX.
+End-to-end deployment with the companion repositories (ROADMAP v1.1). Validated in the lab without the optional
+mTLS files: VPX from netscaler-vpx-deploy v1.0.0, netscaler-nitro v1.2.0, NetScaler 14.1 build 73.46, CVAD 2607 LTSR,
+Windows 11 + Edge + Workspace app 2607.1 (HTML5 and hybrid launches with Entra SSO), way back of the Broker site and
+undo of the NetScaler objects through the netscaler-nitro journals.
 
 ### Added
 - `netscaler/` object files for netscaler-nitro (>= v1.2.0), from the tested lab Gateway, placeholders only:
@@ -45,7 +48,7 @@ End-to-end deployment with the companion repositories (ROADMAP v1.1). Not yet va
   - `11-entra-sso-gateway.json`: Gateway vserver on 443 (ICA only), SSL and HTTP (WebSocket) profile, session
     policy to the StoreFront store with SSO, rewrite `X-Citrix-OIDC-Access-Token` = `AAA.USER.ATTRIBUTE("accesstoken")`
     on `gatewayauth/login` / `citrixagbasic/authenticate`, STA, certificate bindings.
-  - `12-entra-sso-mtls.json` + `12-entra-sso-mtls-certs.json` (optional): client CA certkeys and bindings, SSL
+  - `12-entra-sso-mtls.json` + `12-entra-sso-mtls-certs.json` (optional, not part of the validation run): client CA certkeys and bindings, SSL
     profile `clientAuth ENABLED` / `clientCert Mandatory`, factor 1 rule `CLIENT.SSL.CLIENT_CERT.EXISTS`.
   - `09-entra-sso-gateway-cert.json`: Gateway certificate with the Let's Encrypt chain up to Root YR cross-signed
     by ISRG Root X1 (when no ACME client installs it).
@@ -54,7 +57,9 @@ End-to-end deployment with the companion repositories (ROADMAP v1.1). Not yet va
   previous values as a `Set-BrokerSite` command, reports `AzureSSOnResourceAppId`.
 - `docs/deployment.md`: runbook from the VPX (netscaler-vpx-deploy) over base config and certificate
   (netscaler-nitro, ACME client), Entra, NetScaler, StoreFront and Broker to the export check; minimum versions;
-  way back per step. Screenshot of the Gateway deploy (`docs/img/nitro-deploy-gateway.webp`).
+  way back per step, validation note. Screenshot of the Gateway deploy (`docs/img/nitro-deploy-gateway.webp`).
+- `docs/troubleshooting.md`: a Conditional Access sign-in frequency on Citrix-Workspace-Resource makes the first launch
+  after the period fail (re-authentication inside the launch); the next launch works.
 
 ### Changed
 - `.gitignore`: `netscaler/*.local.json` and `certs/`.

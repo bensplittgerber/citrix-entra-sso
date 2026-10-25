@@ -27,6 +27,14 @@ src/
 
 The release notes of every citrix-entra-sso version name the repository versions it was validated with.
 
+> [!NOTE]
+> **v1.1.0 validation (lab, 2026-10-25):** steps 2-7 run on a VPX built by netscaler-vpx-deploy v1.0.0 and
+> configured by netscaler-nitro v1.2.0, only from the files and scripts named here: Entra Client application, `10` +
+> `11` (re-run: everything `[EXISTS]`), StoreFront store, Broker site, export check, then HTML5 and hybrid launches with
+> Entra SSO (Windows 11, Edge, Workspace app 2607.1) and the way back. **Not part of that run: the optional mTLS files
+> `12-entra-sso-mtls*.json`** - the same objects run on the manually built and verified mTLS Gateway of v1.0, but
+> they were not deployed through this runbook.
+
 ## Before you start
 
 - DNS: `gatewayUrl` (e.g. `gateway.example.org`) -> Gateway VIP; the NetScaler resolves `login.microsoftonline.com`,
@@ -132,7 +140,7 @@ $cred  = Get-Credential nsroot
 The six cache policy bindings report `[EXISTS]` on the brand-new vserver: NetScaler 14.1 binds the built-in cache
 policies itself when a Gateway vserver is added. They are not journaled and go away with the vserver.
 
-Optional mTLS:
+Optional mTLS (not part of the v1.1.0 validation run, see the note under Versions):
 
 ```powershell
 & "$nitro\Deploy-NsCertificates.ps1" -ConfigFile .\netscaler\12-entra-sso-mtls-certs.local.json -Credential $cred -PinnedPublicKey $pin -NoProxy

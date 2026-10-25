@@ -157,3 +157,25 @@ Recommendation:
   `certutil -urlfetch -verify root-yr-by-x1.pem` (file from letsencrypt.org/certificates); afterwards
   `CN=ISRG Root X1` is in `Cert:\LocalMachine\Root`. Verified on the remote worker; the next launch worked.
 - Check: `Get-ChildItem Cert:\LocalMachine\Root | ? Subject -match 'ISRG'`.
+
+## Conditional Access sign-in frequency: the first launch after the period can fail
+Symptom (lab 2026-10-25, Conditional Access policy on Citrix-Workspace-Resource with phishing-resistant MFA and a
+sign-in frequency of 1 hour, W11, Edge): the store logon through the Gateway works without a prompt, but the first
+launch after the sign-in frequency has run out fails:
+- hybrid: Workspace app connects, the VDA waits and then shows the Windows logon screen (failure signature above,
+  `0xC0048422`);
+- HTML5: the launch pop-up asks to sign in again (passkey / Windows Hello) and the session ends with "Citrix Workspace
+  app cannot connect to the server".
+
+The next launch right after that sign-in works for both, and repeated launches within the period need no prompt.
+The token for the VDA is requested at launch time, so a re-authentication that Conditional Access demands lands inside
+the launch, and the VDA does not wait for an interactive sign-in (about 30 s, see the failure signature).
+
+What to do:
+- Plan the sign-in frequency on Citrix-Workspace-Resource with this in mind: a short period means one failed first
+  launch per period. Prefer a longer period. Moving the sign-in frequency to the store sign-in (the Client application),
+  so the re-authentication happens at the Gateway logon instead of inside a launch, is an option that was not tested.
+- Tell users: if the first launch shows the Windows logon screen or "cannot connect" after a sign-in prompt, launch
+  again.
+- In the re-authentication pop-up Entra offers the account's default method first (a password alone does not satisfy
+  phishing-resistant MFA); "Sign in another way" leads straight to passkey / Windows Hello.
