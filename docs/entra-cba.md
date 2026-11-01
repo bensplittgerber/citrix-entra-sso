@@ -66,6 +66,8 @@ and the user is in CBA scope. Lab result:
 | in the CBA exclusion group | `500186 Certificate-based authentication is disabled for the user` | `AzureAdPrt : NO` |
 | removed from the exclusion | success, `X.509 Certificate`, single-factor | `AzureAdPrt : YES`, `OnPremTgt : YES`, `CloudTgt : YES` |
 
+![FAS desktop on a hybrid joined VDA: dsregcmd shows AzureAdJoined, DomainJoined, AzureAdPrt, OnPremTgt and CloudTgt YES](img/entra-cba-fas-prt-dsregcmd.png)
+
 The default `auditLogs/signIns` query returns interactive sign-ins only - filter
 `signInEventTypes/any(t: t eq 'nonInteractiveUser')` to see the PRT request.
 
