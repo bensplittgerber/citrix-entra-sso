@@ -121,7 +121,7 @@ Not covered: Citrix DaaS / Citrix Cloud (own Citrix documentation), Entra joined
 | `netscaler/` | JSON object files for [netscaler-nitro](https://github.com/bensplittgerber/netscaler-nitro) (>= v1.2.0, v1.2.1 recommended): Entra OIDC nFactor, Gateway on 443 with token rewrite, optional mTLS |
 | `pki/` | optional mTLS: step-ca client CA templates (CA config, leaf template, compose, nginx CRL) - see [client CA](docs/client-ca.md) |
 | `config/` | `example.json` with placeholders; real values go into `*.local.json` (git-ignored) |
-| `docs/` | [end-to-end deployment](docs/deployment.md), [architecture](docs/architecture.md), troubleshooting signatures, client matrix, limitations, [ROADMAP](docs/ROADMAP.md) (v1.1: end-to-end deployment with netscaler-nitro and netscaler-vpx-deploy), [release steps](docs/release.md) |
+| `docs/` | [end-to-end deployment](docs/deployment.md), [architecture](docs/architecture.md), troubleshooting signatures, client matrix, limitations, [Entra CBA with an own CA](docs/entra-cba.md) (incl. PRT in FAS desktops), [ROADMAP](docs/ROADMAP.md) (v1.1: end-to-end deployment with netscaler-nitro and netscaler-vpx-deploy), [release steps](docs/release.md) |
 
 ## Conventions
 Placeholders only (`example.org`, `192.0.2.x`, `<tenant-id>`). No secrets in files or on command lines: client
