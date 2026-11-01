@@ -17,6 +17,13 @@ Lab-tested 2026-11 (Graph v1.0 PKI store, beta method policy, Windows 11 / Edge,
    (issuing CA SKI -> group).
 4. Users: in the policy's include group and **not** in any exclusion group.
 
+| | |
+|---|---|
+| ![PKI store with the CBA root and issuing CA: not expired, issuer hints on, CRL endpoints](img/entra-cba-pki-store.webp) | ![Entra certificate picker offers only the certificate of the trusted CBA issuing CA](img/entra-cba-certificate-picker.webp) |
+| **PKI store:** root + issuing CA, issuer hints on, one CRL URL per entry. | **Issuer hints:** the picker on `certauth.login.microsoftonline.com` offers only the CBA certificate, although the card holds more. |
+| ![Windows smart card PIN prompt during the Entra certificate sign-in](img/entra-cba-smartcard-pin.webp) | ![Entra 'Tenant configuration in progress' page while issuer hints are provisioned](img/entra-cba-issuer-hints-provisioning.png) |
+| **PIN** of the YubiKey PIV applet; the sign-in log then shows `X.509 Certificate`, `multiFactorAuthentication`. | **After a CA list change:** "Tenant configuration in progress" (`AADSTS2205016`) for every certificate sign-in. |
+
 ## Lessons
 * **PKI store upload: send only `certificate`, `certificateAuthorityType`, `certificateRevocationListUrl`,
   `isIssuerHintEnabled`.** The Graph docs list `displayName`, `thumbprint`, `expirationDateTime` as settable or even
