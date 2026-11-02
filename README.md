@@ -27,7 +27,7 @@ What has to fit together:
 | Component | Key settings |
 |---|---|
 | Entra ID | Client application per Gateway (OIDC, SPA redirect URI = Store Web URL with `/`, `ctxaadsso://`), Citrix-Workspace-Resource with RDS protocol and approved client app, Conditional Access (phishing-resistant MFA) |
-| NetScaler Gateway | nFactor: optional certificate check (NO_AUTHN), OIDC to Entra with user name `oid`, token rewrite to StoreFront, ICA proxy |
+| NetScaler Gateway | nFactor: optional certificate check (UPN as Entra `login_hint`), OIDC to Entra with user name `oid`, token rewrite to StoreFront, ICA proxy |
 | StoreFront | store with Entra SSO enabled (no FAS), modern UI, CitrixAGBasic + CitrixFederation, Entra tenant |
 | Delivery Controller | Broker site `AzureSSOnClientId` / `AzureSSOnAuthorizeUrl` / `AzureSSOnRedirectUrl` (**site-wide**), delivery group logon type HybridAzureAd |
 | VDA | Entra hybrid joined (CVAD 2607 LTSR) |

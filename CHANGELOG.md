@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- `netscaler/12-entra-sso-mtls.json`: factor 1 takes the UPN from the client certificate (certAction
+  `cert_act_entrasso_upn`, `SubjectAltName:PrincipalName`), so the OAuth action sends it to Entra as `login_hint` and
+  the sign-in page is pre-filled. The OAuth factor (`userNameField oid`) replaces that user name; StoreFront still gets
+  the oid (lab 2026-11-02, NetScaler 14.1-73.46, hybrid launch). Side effect: a certificate without a UPN otherName SAN
+  fails factor 1. Way back: `set authentication policy auth_pol_entrasso_factor1 -action NO_AUTHN`.
+- `docs/troubleshooting.md` (mTLS Gateway): the earlier note "nFactor keeps the user name of the first factor" is
+  replaced by the tested behavior; a `login_hint` rewrite on the redirect does not work (the AAA redirect to Entra is
+  outside the rewrite engine). `10-entra-sso-aaa.json` note, `architecture.md`, `client-ca.md`, `deployment.md`,
+  README follow.
+
 ## v1.2.0 - 2026-10-25
 
 Client certificate authority for the optional mTLS Gateway (ROADMAP v1.2). Lab-verified: step-ca client CA,

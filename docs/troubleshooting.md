@@ -68,11 +68,22 @@ the endpoints explicitly (authorization, token, keys, issuer, audience) without 
 (lab 2026-10-23; the working reference Gateway had neither).
 
 ## mTLS Gateway in front of the store
-nFactor keeps the user name of the first factor. A client certificate factor that sets the user name (UPN from the SAN)
-therefore hides the Entra `oid`; use a certificate check without a user name (`-action NO_AUTHN`, rule
-`CLIENT.SSL.CLIENT_CERT.EXISTS`) as factor 1. The certificate is still enforced by the SSL profile. Note: certificate
-and Entra user are then no longer coupled (add a UPN comparison). Native Workspace app cannot add an account on a
-Gateway that requires a client certificate; only browser / hybrid launches.
+Factor 1 is a certificate check (rule `CLIENT.SSL.CLIENT_CERT.EXISTS`) with a certAction that takes the UPN from the
+certificate (`-userNameField SubjectAltName:PrincipalName`). With that user name the OAuth action sends
+`login_hint=<UPN>` on the redirect to Entra by itself, and the Entra sign-in page is pre-filled. The OAuth factor
+(`userNameField oid`) then replaces the factor-1 user name, so StoreFront still gets the `oid` (lab 2026-11-02,
+NetScaler 14.1-73.46: session user = oid, hybrid launch with Entra SSO OK). An earlier note here ("nFactor keeps the
+user name of the first factor") does not hold for this setup.
+- Entra page with an **empty** user name: factor 1 has `-action NO_AUTHN` (no user name, so no login_hint). That
+  still works, the user just types the UPN.
+- A rewrite that appends `login_hint` to the `Location` of the redirect does **not** work: the AAA engine creates the
+  redirect to Entra outside the rewrite engine (0 hits, bound on the AAA or the Gateway vServer).
+- A certificate without a UPN otherName SAN fails factor 1 (no user name) instead of passing to Entra.
+- login_hint only pre-fills: the user can change it, and the certificate and the Entra user are not compared (add a
+  UPN comparison for that). The certificate itself is still enforced by the SSL profile.
+
+Native Workspace app cannot add an account on a Gateway that requires a client certificate; only browser / hybrid
+launches.
 
 Verified end to end with `-clientCert Mandatory` (lab 2026-10-24, YubiKey PIV for the client certificate, YubiKey
 FIDO2 passkey for Entra): HTML5 and hybrid launches (Windows 11 Edge/Chrome, macOS Chrome, Windows Server remote

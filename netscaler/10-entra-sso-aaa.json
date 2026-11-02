@@ -36,7 +36,7 @@
         "priority": 100, "gotopriorityexpression": "NEXT" } },
 
     { "comment": "Factor 1: no user name, only routes to the Entra factor (NO_AUTHN)",
-      "note": "Rule true without mTLS. 12-entra-sso-mtls.json changes this rule to CLIENT.SSL.CLIENT_CERT.EXISTS. Factor 1 must never set a user name (no certAction): nFactor keeps the first user name, and StoreFront then gets a UPN instead of the Entra oid and refuses SSO." },
+      "note": "Rule true without mTLS. 12-entra-sso-mtls.json changes this rule to CLIENT.SSL.CLIENT_CERT.EXISTS. With mTLS, 12 also sets a certAction (UPN from the certificate) so that Entra gets a login_hint; the OAuth factor (usernamefield oid) replaces that user name and StoreFront still gets the oid (lab 2026-11-02)." },
     { "resource": "authenticationpolicy", "data": {
         "name": "auth_pol_entrasso_factor1", "rule": "true", "action": "NO_AUTHN" } },
 

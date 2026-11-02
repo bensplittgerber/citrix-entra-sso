@@ -6,7 +6,7 @@
 | # | Step | Where it breaks (see [troubleshooting](troubleshooting.md)) |
 |---|---|---|
 | 1 | The browser opens the store URL on the Gateway (HTTPS 443; with mTLS the TLS handshake requires the client certificate). | No certificate: connection reset (intended). Store on a custom port: hybrid fails later at step 5. |
-| 2 | nFactor: certificate check without a user name (NO_AUTHN), then OIDC to Entra with `userNameField oid`; Conditional Access applies (phishing-resistant MFA). | User name = UPN instead of the object id: StoreFront refuses Entra SSO. |
+| 2 | nFactor: certificate check (with mTLS the UPN from the certificate, sent to Entra as `login_hint`), then OIDC to Entra with `userNameField oid`, which replaces the UPN; Conditional Access applies (phishing-resistant MFA). | User name = UPN instead of the object id: StoreFront refuses Entra SSO. |
 | 3 | A rewrite passes the Entra access token to StoreFront (`X-Citrix-OIDC-Access-Token`); StoreFront validates it and enumerates the resources. | Store web site not on the modern UI: no Entra token flow at launch. |
 | 4 | Launch: StoreFront gets the launch data from the Delivery Controller; the ICA file carries the **site-wide** `AzureSSOnClientId`, `AzureSSOnAuthorizeUrl`, `AzureSSOnRedirectUrl` and the VDA's Entra device id. | Redirect URL not equal to the Store Web URL (with `/`): no SSO. Only one store per site. |
 | 5 | The browser - the store page for HTML5, the Citrix Web Extension for hybrid - gets a token for **Citrix-Workspace-Resource**, scope `ms-device-service://citrix.cloud.com/3a510bb1-.../id/<VDA device id>/user_impersonation`, silently with the Entra session. | Extension not allowed on the store site, or store on a custom port: no token request at all. |

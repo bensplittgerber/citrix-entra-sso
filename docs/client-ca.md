@@ -204,8 +204,8 @@ enrollment output, or plan renewals by cohort.
 ## Limits
 
 - **No OCSP**: step-ca has no OCSP responder; revocation reaches the Gateway with the next CRL fetch.
-- **Identity gap**: the Gateway takes the user name from the certificate (UPN otherName), Entra signs in whoever logs
-  on at Entra. The two are not compared (see [ROADMAP](ROADMAP.md), v1.0.x).
+- **Identity gap**: the Gateway takes the UPN from the certificate only as Entra `login_hint` (pre-filled, the user
+  can change it); Entra signs in whoever logs on at Entra. The two are not compared (see [ROADMAP](ROADMAP.md), v1.0.x).
 - **Enrollment on Windows only** (minidriver + certreq). macOS users enroll on a Windows jumphost or VDI.
 - Re-enrollment inside an HDX session (card through Citrix smart card redirection) is not verified.
 - Native Workspace app cannot add an account on a Gateway that requires a client certificate (see

@@ -23,12 +23,14 @@
     { "resource": "sslvserver", "method": "PUT", "data": {
         "vservername": "gw_example_entrasso", "sslprofile": "ssl_prof_entrasso_fe_mtls" } },
 
-    { "comment": "Factor 1: certificate check WITHOUT user name (NO_AUTHN) -> next factor lbl_entrasso (Entra OIDC)",
-      "note": "Changes the rule of auth_pol_entrasso_factor1 from 10-entra-sso-aaa.json. No certAction here: a user name from the certificate (UPN) would win over the Entra oid and StoreFront refuses SSO. The certificate and the Entra user are not compared with each other." },
+    { "comment": "Factor 1: certificate check that takes the UPN from the certificate -> next factor lbl_entrasso (Entra OIDC)",
+      "note": "Changes rule and action of auth_pol_entrasso_factor1 from 10-entra-sso-aaa.json. With a user name from factor 1 the OAuth action sends login_hint=<UPN> on the redirect to Entra by itself: the Entra page is pre-filled. No rewrite needed - a RESPONSE rewrite never sees the AAA redirect to Entra. The OAuth factor (usernamefield oid) then replaces the UPN, so StoreFront still gets the oid (lab 2026-11-02, NetScaler 14.1-73.46, hybrid launch OK). Side effect: a certificate without a UPN otherName SAN fails factor 1. login_hint only pre-fills - the user can change it, the certificate and the Entra user are still not compared. For no login_hint keep action NO_AUTHN (leave out the certAction and the action field)." },
+    { "resource": "authenticationcertaction", "data": {
+        "name": "cert_act_entrasso_upn", "usernamefield": "SubjectAltName:PrincipalName" } },
     { "resource": "authenticationpolicy", "method": "PUT", "data": {
-        "name": "auth_pol_entrasso_factor1", "rule": "CLIENT.SSL.CLIENT_CERT.EXISTS" } },
+        "name": "auth_pol_entrasso_factor1", "rule": "CLIENT.SSL.CLIENT_CERT.EXISTS", "action": "cert_act_entrasso_upn" } },
 
     { "comment": "Way back (the two PUT steps above are [MANUAL] for undo) - run BEFORE Undo-NsObjects.ps1 of this file",
-      "note": "set authentication policy auth_pol_entrasso_factor1 -rule true ; set ssl vserver gw_example_entrasso -sslProfile ssl_prof_entrasso_fe ; then Undo-NsObjects.ps1 -Journal <journal of this file> removes the CA bindings and ssl_prof_entrasso_fe_mtls." }
+      "note": "set authentication policy auth_pol_entrasso_factor1 -rule true -action NO_AUTHN ; set ssl vserver gw_example_entrasso -sslProfile ssl_prof_entrasso_fe ; then Undo-NsObjects.ps1 -Journal <journal of this file> removes cert_act_entrasso_upn, the CA bindings and ssl_prof_entrasso_fe_mtls." }
   ]
 }
