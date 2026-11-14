@@ -43,7 +43,7 @@ messaging host, VDA prerequisites. RDP with Entra SSO to the same VDA worked (ho
 | iPadOS, embedded web view | not supported (WebKit; also no FIDO2) | - | not tested |
 
 Hybrid launches in all rows need the store on **port 443** (see "store URL with a custom port").
-Requirements seen in tests: pop-ups allowed for the store; on macOS browsers the silent Entra request (`prompt=none`)
+Requirements seen in tests: third-party cookies allowed for the store site (see below); pop-ups allowed for the store; on macOS browsers the silent Entra request (`prompt=none`)
 needs the Entra session cookie (worked with "Stay signed in" (KMSI) enabled; KMSI-off matrix pending).
 
 ## NetScaler OIDC action: user name must be the Entra object id
@@ -113,6 +113,17 @@ successfully from MSAL` - but the HDX connection fails: HTML5 log `WebSocket con
 Edge net-export `WEBSOCKET_UPGRADE_FAILURE` / `ERR_INVALID_RESPONSE` towards the Gateway. This is the proxy, not Entra
 SSO. Fix on the proxy side: exclude the Gateway FQDN from SSL inspection (and allow WebSockets). A Gateway that
 requires a client certificate (mTLS) cannot work through SSL inspection at all.
+
+## Third-party cookies blocked in the browser (Edge InPrivate)
+Symptom (lab 2026-11, Edge InPrivate, store through the mTLS Gateway): Gateway logon and store work, the launch opens
+the session, but it ends on the Windows logon screen ("Connection established. Negotiating capabilities..." first) -
+the Entra token is not handed over.
+Cause: Edge blocks third-party cookies in InPrivate windows by default (eye icon in the address bar: "Third-party
+cookies blocked"). The silent Entra token request of the store page needs the Entra session cookies, which are
+third-party in the store page's context.
+Fix: allow third-party cookies for the store site (eye icon -> "Third-party cookies" on). Edge reloads the page; the
+next launch works with Entra SSO, without a new Gateway logon. For users: [user guide](user-guide.md) with
+screenshots. On managed devices check whether a browser policy blocks third-party cookies for the store site.
 
 ## Hybrid launch in Edge: Citrix Web Extension site access
 Symptom (Windows 11, Edge, hybrid launch = browser -> Workspace app): the browser gets the Entra token in time (Edge

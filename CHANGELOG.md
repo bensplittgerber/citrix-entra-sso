@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+- `docs/user-guide.md`: browser settings for users (Citrix Web Extension, third-party cookies, pop-ups, ISRG Root X1)
+  with screenshots; third-party cookies blocked (Edge InPrivate default) = no Entra token handover, Windows logon
+  screen; allowing them for the store site fixes it without a new Gateway logon (lab 2026-11).
+- `docs/troubleshooting.md`: section "Third-party cookies blocked in the browser (Edge InPrivate)".
+
 ### Changed
 - `netscaler/12-entra-sso-mtls.json`: factor 1 takes the UPN from the client certificate (certAction
   `cert_act_entrasso_upn`, `SubjectAltName:PrincipalName`), so the OAuth action sends it to Entra as `login_hint` and

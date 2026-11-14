@@ -42,7 +42,8 @@ What has to fit together:
 | **mTLS Gateway (optional):** Workspace app asks for the smart card PIN for its own HDX connection. | **Without the client certificate** the Gateway resets the TLS connection - no logon page is exposed. |
 
 *Lab screenshots, host and user names replaced with placeholders.* Tested clients and versions:
-[client matrix](docs/troubleshooting.md#client-matrix-lab-2026-10).
+[client matrix](docs/troubleshooting.md#client-matrix-lab-2026-10). Browser settings for users (Citrix Web Extension,
+third-party cookies, pop-ups): [user guide](docs/user-guide.md).
 
 ## What this repo adds to the Citrix documentation
 - **`AzureSSOnRedirectUrl` (Broker site, site-wide) must be the Store Web URL exactly as the browser sees it,
@@ -121,7 +122,7 @@ Not covered: Citrix DaaS / Citrix Cloud (own Citrix documentation), Entra joined
 | `netscaler/` | JSON object files for [netscaler-nitro](https://github.com/bensplittgerber/netscaler-nitro) (>= v1.2.0, v1.2.1 recommended): Entra OIDC nFactor, Gateway on 443 with token rewrite, optional mTLS |
 | `pki/` | optional mTLS: step-ca client CA templates (CA config, leaf template, compose, nginx CRL) - see [client CA](docs/client-ca.md) |
 | `config/` | `example.json` with placeholders; real values go into `*.local.json` (git-ignored) |
-| `docs/` | [end-to-end deployment](docs/deployment.md), [architecture](docs/architecture.md), troubleshooting signatures, client matrix, limitations, [Entra CBA with an own CA](docs/entra-cba.md) (incl. PRT in FAS desktops), [ROADMAP](docs/ROADMAP.md) (v1.1: end-to-end deployment with netscaler-nitro and netscaler-vpx-deploy), [release steps](docs/release.md) |
+| `docs/` | [user guide](docs/user-guide.md), [end-to-end deployment](docs/deployment.md), [architecture](docs/architecture.md), troubleshooting signatures, client matrix, limitations, [Entra CBA with an own CA](docs/entra-cba.md) (incl. PRT in FAS desktops), [ROADMAP](docs/ROADMAP.md) (v1.1: end-to-end deployment with netscaler-nitro and netscaler-vpx-deploy), [release steps](docs/release.md) |
 
 ## Conventions
 Placeholders only (`example.org`, `192.0.2.x`, `<tenant-id>`). No secrets in files or on command lines: client
