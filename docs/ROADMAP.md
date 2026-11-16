@@ -75,3 +75,7 @@ Prerequisites / risks to verify in the lab:
 
 Lab test plan: site stays on Gateway A; on Gateway B a response rewrite on LaunchIca to B's Client application and
 store URL. Pass = HTML5 (and hybrid) launch with Entra SSO through B **while** A keeps working on the same site.
+
+## Proposed demo: native physical smartcard logon and PIN reuse (2026-11-16)
+
+See [demo validation plan](smartcard-demo.md). Preserve v1.2 and site-wide Entra SSO settings; use an isolated FAS-free store/Gateway and test VDA. First verify native smartcard control, then federated OIDC launch with physical PIV Windows authentication. Measure cold/warm PIN prompts, identity mismatch rejection, revocation, lock/unlock and removal behavior. Publish exact tested conditions only after validation; no new release commitment.
