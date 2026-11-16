@@ -45,6 +45,10 @@ What has to fit together:
 [client matrix](docs/troubleshooting.md#client-matrix-lab-2026-10). Browser settings for users (Citrix Web Extension,
 third-party cookies, pop-ups): [user guide](docs/user-guide.md).
 
+## Proposed demo: physical smartcard logon without FAS
+
+[Demo and validation plan](docs/smartcard-demo.md): compare the existing mandatory-mTLS Entra SSO flow with a native physical PIV Windows logon after federated Gateway authentication. Test whether the mTLS PIN can be reused for a fresh ICA desktop logon, plus smartcard unlock and removal behavior. The federated physical-smartcard path and PIN reuse are **experimental, not validated release features**; v1.2 remains unchanged.
+
 ## What this repo adds to the Citrix documentation
 - **`AzureSSOnRedirectUrl` (Broker site, site-wide) must be the Store Web URL exactly as the browser sees it,
   with a trailing slash**, e.g. `https://gateway.example.org/Citrix/StoreWeb/`. The CVAD 2607 page only says it
