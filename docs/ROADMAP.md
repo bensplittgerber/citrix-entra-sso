@@ -79,3 +79,19 @@ store URL. Pass = HTML5 (and hybrid) launch with Entra SSO through B **while** A
 ## Proposed demo: native physical smartcard logon and PIN reuse (2026-11-16)
 
 See [demo validation plan](smartcard-demo.md). Preserve v1.2 and site-wide Entra SSO settings; use an isolated FAS-free store/Gateway and test VDA. First verify native smartcard control, then federated OIDC launch with physical PIV Windows authentication. Measure cold/warm PIN prompts, identity mismatch rejection, revocation, lock/unlock and removal behavior. Publish exact tested conditions only after validation; no new release commitment.
+
+## External SAML IdP federation compatibility (proposed, unvalidated — 2026-11-17)
+
+[Validation plan](federated-idp-validation.md). Test whether the released FAS-free Entra SSO architecture also works
+when the user's Entra UPN domain is **federated to an external SAML identity provider** (Keycloak initially), while
+NetScaler still authenticates by **OIDC to Entra**. This is distinct from direct NetScaler-to-Keycloak authentication.
+
+- Preserve a working Entra-native baseline and an independent cloud-only recovery administrator; back up federation
+  configuration, verify affected identities and prepare an explicit rollback before any domain change.
+- Confirm upstream SAML/Entra authentication, then separately confirm **Citrix-Workspace-Resource** token issuance,
+  HTML5 and browser-to-Workspace hybrid launches, and **CloudAP Windows logon on a hybrid-joined VDA without FAS**.
+- Test Keycloak FIDO2/WebAuthn separately from Entra-native passkeys; verify actual Entra Conditional Access and MFA
+  claims instead of assuming external FIDO2 counts as phishing-resistant MFA.
+- Capture sanitized positive and negative evidence, restore the original federation provider and rerun the baseline.
+- **No monitoring-backend changes in this phase.** Keep customer topology, domain names, secrets and experimental
+  federation settings outside this public repository. Do not claim support until end-to-end testing is complete.
